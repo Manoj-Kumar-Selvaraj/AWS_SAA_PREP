@@ -1,1 +1,11 @@
 #!/usr/bin/bash
+aws s3 ls
+# List all buckets
+bucket_list=$(aws s3api list-buckets --query "Buckets[].{Name:Name,CreationDate:CreationDate}" --output json)
+
+# Extract bucket names and creation dates and sort by creation date
+echo "$bucket_list" | jq -r '.[] | "\(.CreationDate) \(.Name)"' | sort -r | while read -r line; do
+    creation_date=$(echo "$line" | awk '{print $1}')
+    bucket_name=$(echo "$line" | awk '{print $2}')
+    echo "Bucket: $bucket_name, Created on: $creation_date"
+done
