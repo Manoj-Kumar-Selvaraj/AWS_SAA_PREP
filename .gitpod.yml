@@ -11,8 +11,8 @@ tasks:
         aws s3 ls
         mkdir S3
         cd $THEIA_WORKSPACE_ROOT/S3
-        echo "#\!/usr/bin/bash" > create-bucket
-        echo "#\!/usr/bin/bash" > list-bucket
-        echo "#\!/usr/bin/bash" > delete-bucket
-        echo "#\!/usr/bin/bash" > sync
+        echo '#!/usr/bin/bash' > create-bucket
+        echo '#!/usr/bin/bash' > list-bucket
+        echo '#!/usr/bin/bash' > delete-bucket
+        echo '#!/usr/bin/bash' > sync
         
