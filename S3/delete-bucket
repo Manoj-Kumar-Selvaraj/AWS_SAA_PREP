@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+echo "DELETE-BUCKET"
+# Check if bucket name is provided
+if [ -z "$1" ]; then
+    echo "Error: Bucket name is required."
+    exit 1
+fi
+
+bucket_name="$1"
+region="us-east-1"  # Change this if needed
+
+# Check if the bucket already exists
+bucket_exists=$(aws s3api list-buckets --query "Buckets[?Name=='$bucket_name'].Name" --output text --region $region)
+
+if [ "$bucket_exists" == "$bucket_name" ]; then
+        echo "Bucket '$bucket_name' exist. Deleting bucket..."
+    aws s3api delete-bucket --bucket "$bucket_name" --region "$region" --output text
+    if [ $? -eq 0 ]; then
+        echo "Bucket '$bucket_name' deleted successfully."
+    else
+        echo "Failed to delete bucket '$bucket_name'."
+        exit 1
+    fi
+else
+    echo "Bucket '$bucket_name' doesnot exists."
+fi
