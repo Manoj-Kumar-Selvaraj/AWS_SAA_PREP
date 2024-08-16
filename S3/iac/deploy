@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+#https://docs.aws.amazon.com/cli/latest/reference/cloudformation/
+echo "deploy via CFN"
+STACK_NAME="manoj-aws"
+aws cloudformation deploy \
+--no-execute-changeset \
+--region us-east-1 \
+--template-file /workspace/AWS_SAA_PREP/S3/iac/template.yaml --stack-name $STACK_NAME
