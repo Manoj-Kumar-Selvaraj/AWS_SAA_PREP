@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 echo "CREATE-BUCKET"
+set -e  # Stop script on first failure
 # Check if bucket name is provided
 if [ -z "$1" ]; then
     echo "Error: Bucket name is required."

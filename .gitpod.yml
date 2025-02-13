@@ -1,4 +1,7 @@
 tasks:
+  - name: Random-Utils
+    before: |
+      sudo apt install tree -y
   - name: Powershell
     before: |
       sudo apt-get update

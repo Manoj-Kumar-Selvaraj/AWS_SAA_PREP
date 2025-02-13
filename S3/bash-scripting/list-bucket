@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+set -e  # Stop script on first failure
 aws s3 ls
 # List all buckets
 bucket_list=$(aws s3api list-buckets --query "Buckets[].{Name:Name,CreationDate:CreationDate}" --output json)
