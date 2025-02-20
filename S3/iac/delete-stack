@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+#https://docs.aws.amazon.com/cli/latest/reference/cloudformation/
+echo "deleted stack via CFN"
+STACK_NAME="manoj-aws"
+aws cloudformation delete-stack \
+--region us-east-1 \
+--stack-name $STACK_NAME
