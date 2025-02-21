@@ -1,0 +1,5 @@
+1)Configuring AWS might give issues some times, unsetting the env variables(sometimes refer old keys) will resolve the issue
+    - unset AWS_SECRET_ACCESS_KEY
+    - unset AWS_ACCESS_KEY_ID
+
+2)

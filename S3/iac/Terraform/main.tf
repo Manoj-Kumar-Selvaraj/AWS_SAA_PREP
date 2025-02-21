@@ -1,0 +1,15 @@
+resource "aws_s3_bucket" "test_bucket" {
+  bucket = "awssaptestbucketmanoj"
+
+  tags = {
+    Exam = "SAP"
+  }
+}
+
+resource "aws_s3_object" "test_object" {
+  bucket = aws_s3_bucket.test_bucket.id
+  key    = "file.txt"
+  source = "file.txt"
+
+  etag = filemd5("file.txt")
+}
