@@ -1,10 +1,12 @@
 tasks:
   - name: Random-Utils
     before: |
+      while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 1; done
       sudo apt update && sudo apt install -y tree
 
   - name: Powershell
     before: |
+      while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 1; done
       sudo apt-get update
       sudo apt-get install -y wget apt-transport-https software-properties-common
       source /etc/os-release
@@ -17,6 +19,7 @@ tasks:
 
   - name: Terraform
     before: |
+      while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 1; done
       sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
       wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
       echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
@@ -28,6 +31,7 @@ tasks:
     env:
       AWS_CLI_AUTO_PROMPT: on-partial
     before: |
+      while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 1; done
       cd /workspace
       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       unzip awscliv2.zip
