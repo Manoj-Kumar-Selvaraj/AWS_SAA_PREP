@@ -1,46 +1,70 @@
 #!/usr/bin/bash
-echo "PUT-OBJECTS"
+echo "🔐 ENCRYPTION-IN-BUCKET"
+
 set -e  # Stop script on first failure
+
 # Check if bucket name is provided
 if [ -z "$1" ]; then
-    echo "Error: Bucket name is required."
+    echo "❌ Error: Bucket name is required."
+    exit 1
+fi
+
+# Check if file name is provided
+if [ -z "$2" ]; then
+    echo "❌ Error: File name is required."
     exit 1
 fi
 
 bucket_name="$1"
-region="us-east-1"  # Change this if needed
+file_name="$2"
+kms_key_id="${3:-}"  # Optional KMS Key ID
 
-OUTPUT_DIR="/tmp/s3-files"
+# Check if the bucket exists
+bucket_exists=$(aws s3api list-buckets --query "Buckets[?Name=='$bucket_name'].Name" --output text)
 
-if [ -d $OUTPUT_DIR ]; then;
-    rm -r "$OUTPUT_DIR"
+if [ "$bucket_exists" != "$bucket_name" ]; then
+    echo "❌ Error: Bucket '$bucket_name' does not exist!"
+    exit 1
 fi
 
-mkdir -p "$OUTPUT_DIR"
+# Enable versioning for the bucket
+aws s3api put-bucket-versioning --bucket "$bucket_name" --versioning-configuration Status=Enabled
 
-NUM_FILES=$((RANDOM%6+5))
+if [ -f "$file_name" ]; then
+    echo "📂 Creating encryption folders in S3..."
+    
+    # Create "folders" (empty objects with "/")
+    aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-S3/"
+    aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-KMS/"
+    aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-C/"
 
-for ((i=1; i<=NUM_FILES; i++)); do
-    # Generate the File 
-    echo "FIRST FILE" > "$OUTPUT_DIR/FILE_$i"
-done 
+    echo "🚀 Uploading and encrypting files..."
 
-echo "$NUM_FILES Created"
+    # SSE-S3 (Managed by AWS)
+    aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-S3/$file_name" --body "$file_name" --server-side-encryption AES256
+    echo "✅ Uploaded with SSE-S3 (AES256) → $bucket_name/put_objects-SSE-S3/$file_name"
 
-tree "$OUTPUT_DIR"
-
-# Check if the bucket already exists
-bucket_exists=$(aws s3api list-buckets --query "Buckets[?Name=='$bucket_name'].Name" --output text --region $region)
-
-if [ "$bucket_exists" == "$bucket_name" ]; then
-        aws s3api put-objects -- bucket bucket_exists --query
-    aws s3api delete-bucket --bucket "$bucket_name" --region "$region" --output text
-    if [ $? -eq 0 ]; then
-        echo "Bucket '$bucket_name' deleted successfully."
+    # SSE-KMS (Customer Managed Key)
+    if [ -n "$kms_key_id" ]; then
+        aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-KMS/$file_name" --body "$file_name" --server-side-encryption aws:kms --ssekms-key-id "$kms_key_id"
+        echo "✅ Uploaded with SSE-KMS (KMS Key ID: $kms_key_id) → $bucket_name/put_objects-SSE-KMS/$file_name"
     else
-        echo "Failed to delete bucket '$bucket_name'."
-        exit 1
+        aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-KMS/$file_name" --body "$file_name" --server-side-encryption aws:kms
+        echo "⚠️ Using AWS Managed CMK KMS Key (No KMS Key ID provided)"
     fi
+
+    # SSE-C (Customer Provided Key)
+    encryption_key=$(openssl rand -base64 32)  # Generate a 256-bit key
+    encryption_key_bin=$(echo -n "$encryption_key" | base64 --decode)  # Convert to binary
+    key_md5=$(echo -n "$encryption_key_bin" | openssl dgst -md5 -binary | base64)  # Compute MD5
+
+    aws s3api put-object --bucket "$bucket_name" --key "put_objects-SSE-C/$file_name" --body "$file_name" \
+        --sse-customer-algorithm AES256 --sse-customer-key "$encryption_key" --sse-customer-key-md5 "$key_md5"
+    
+    echo "✅ Uploaded with SSE-C (Customer Key) → $bucket_name/put_objects-SSE-C/$file_name"
+    echo "🔑 Save this key for future retrieval: $encryption_key"
+
 else
-    echo "Bucket '$bucket_name' doesnot exists."
+    echo "❌ Error: File '$file_name' not found!"
+    exit 1
 fi
