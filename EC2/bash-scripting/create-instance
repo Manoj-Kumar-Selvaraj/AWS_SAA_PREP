@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+
+aws ec2 run-instances \
+    --image-id ami-029f33a91738d30e9 \
+    --instance-type t2.micro \
+    --key-name MyKeyPair \
+    --security-group-ids sg-xxxxxxxxxxxxxxxxx \
+    --subnet-id subnet-xxxxxxxxxxxxxxxxx \
+    --associate-public-ip-address \
+    --block-device-mappings '[{"DeviceName": "/dev/sda1", "Ebs": {"VolumeSize": 20, "VolumeType": "gp3"}}]' \
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MyEC2Instance}]' \
+    --region us-east-1

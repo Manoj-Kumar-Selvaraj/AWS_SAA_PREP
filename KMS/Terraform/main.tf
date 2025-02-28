@@ -84,9 +84,13 @@ resource "aws_kms_key" "customer_managed_kms" {
 
 # Create an Alias for the KMS Key
 resource "aws_kms_alias" "customer_kms_alias" {
-  name          = "alias/customer-managed-key"
+  name          = "alias/s3-kms"
   target_key_id = aws_kms_key.customer_managed_kms.key_id
 }
 
 # Get AWS Account ID for policy
 data "aws_caller_identity" "current" {}
+
+output "KMS_KEY_ID" {
+  value = aws_kms_key.customer_managed_kms.key_id
+}
