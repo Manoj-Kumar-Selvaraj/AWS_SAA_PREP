@@ -221,3 +221,34 @@ else
 
     fi
 fi
+
+# Check if Flow Log is Present?
+
+FlowLog_Id=$(aws ec2 describe-flow-logs \
+    --filter "Name=resource-id,Values=$VPC_ID" \
+             "Name=tag:Name,Values=$FlowLogName" \
+    --query "FlowLogs[0].FlowLogId" \
+    --output text 2>FlowLog.Log)
+
+if [ -z "$FlowLog_Id" ]; then
+    echo "No Flow Log found for VPC: $VPC_ID with Name: $FlowLogName"
+    echo "Creating Flow Log..."
+
+    FlowLog_Id=$(aws ec2 create-flow-logs \
+        --resource-type VPC \
+        --resource-ids $VPC_ID \
+        --traffic-type ALL \
+        --log-destination-type cloud-watch-logs \
+        --log-group-name "/aws/vpc-flow-logs/$FlowLogName" \
+        --deliver-logs-permission-arn "arn:aws:iam::<AWS_ACCOUNT_ID>:role/VPCFlowLogsRole" \
+        --query "FlowLogIds[0]" \
+        --output text 2>>FlowLog.Log)
+
+    if [ -z "$FlowLog_Id" ]; then
+        echo "Failed to create Flow Log. Check FlowLog.Log for details."
+    else
+        echo "Flow Log created successfully! FlowLog ID: $FlowLog_Id"
+    fi
+else
+    echo "Flow Log already exists: $FlowLog_Id"
+fi
