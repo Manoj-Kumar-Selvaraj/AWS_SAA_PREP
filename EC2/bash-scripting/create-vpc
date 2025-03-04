@@ -138,6 +138,7 @@ create_subnets() {
 # Check for Route Table Duplicates
 RouteTablePublicId=$(aws ec2 describe-route-tables \
     --filters "Name=tag:Name,Values=$PUBLIC_ROUTE_TABLE_NAME" \
+    "Name=vpc-id,Values=$VPC_ID" \
     --query "RouteTables[0].RouteTableId" \
     --output text --region "$AWS_REGION")
 
@@ -154,6 +155,7 @@ fi
 
 RouteTablePrivateId=$(aws ec2 describe-route-tables \
     --filters "Name=tag:Name,Values=$PRIVATE_ROUTE_TABLE_NAME" \
+    "Name=vpc-id,Values=$VPC_ID" \
     --query "RouteTables[0].RouteTableId" --output text --region "$AWS_REGION")
 
 if [[ -z "$RouteTablePrivateId" || "$RouteTablePrivateId" == "None" ]]; then 
@@ -188,3 +190,34 @@ echo "Internet access enabled in Public Route Table"
 # Create Public and Private Subnets
 create_subnets "public" "$NO_OF_PUBLIC_SUBNETS" "$PUBLIC_RT_ID"
 create_subnets "private" "$NO_OF_PRIVATE_SUBNETS" "$PRIVATE_RT_ID"
+
+# Check For Security Group
+read -p "ENTER SECURITY GROUP NAME: " SG_NAME
+SG_ID=$(aws ec2 describe-security-groups \
+    --filters "Name=vpc-id,Values=$VPC_ID" \
+             "Name=tag:Name,Values=$SG_NAME" \
+    --query "SecurityGroups[0].GroupId" --output text --region "$AWS_REGION" 2>Sg-error.log )
+
+# Create a Security Group
+if [ "$SG_ID" == "None" ]; then
+    aws ec2 create-security-group --group-name "$SG_NAME" --vpc-id "$VPC_ID" --description "FactoryOutletBackendSg" --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=FactoryOutletBackendSg}]"
+    read -p "ENTER SUBNET PROTOCOL TYPE(tcp, udp, icmp, or all) " sg_protocol
+    read -p "ENTER CIDR " sg_cidr
+    read -p "ENTER PORT NO " sg_port
+    # Allow SSH (Port 22) - Restrict to your IP for security
+    aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol "$sg_protocol" --port $sg_port --cidr "sg_cidr"
+
+
+else
+    echo "$SG_NAME: $SG_ID, Already Present, Do you want to Update it?"
+    read -p "PRESS(Y/N) " SG_Flag
+    if [[ "$SG_Flag" == "y" || "$SG_Flag" == "Y" ]]; then
+        read -p "ENTER SUBNET PROTOCOL TYPE(tcp, udp, icmp, or all) " sg_protocol
+        read -p "ENTER CIDR " sg_cidr
+        read -p "ENTER PORT NO " sg_port
+        aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol "$sg_protocol" --port $sg_port --cidr "sg_cidr"
+    else
+        echo "Operation Completed"
+
+    fi
+fi
