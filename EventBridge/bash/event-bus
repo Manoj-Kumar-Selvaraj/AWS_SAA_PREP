@@ -1,0 +1,13 @@
+#!/usr/bin/bash/
+
+# USER INPUTS
+
+read -p "Enter The Bus Name" BusName
+
+# Check if Event Bus is there:
+
+Bus_Name = $(aws events list-event-buses ---name-prefix $BusName) \
+    --query 'EventBuses[0].Name'
+
+if [ -z '$Bus_Name' ];then
+   Bus_Name = $(aws events create-event-bus --name "$BusName" ) 
