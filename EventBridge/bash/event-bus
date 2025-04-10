@@ -10,4 +10,7 @@ Bus_Name = $(aws events list-event-buses ---name-prefix $BusName) \
     --query 'EventBuses[0].Name'
 
 if [ -z '$Bus_Name' ];then
-   Bus_Name = $(aws events create-event-bus --name "$BusName" ) 
+   Bus_Name = $(aws events create-event-bus --name "$BusName" )
+else:
+    echo "$Bus_Name already in place"
+
