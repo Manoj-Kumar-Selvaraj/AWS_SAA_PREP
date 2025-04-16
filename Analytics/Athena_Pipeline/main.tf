@@ -267,26 +267,33 @@ resource "aws_internet_gateway" "Transfer_Fam_Igw" {
   }
 }
 
-resource "aws_route_table" "Transfer_Fam_Rtb" {
+resource "aws_route_table" "Transfer_Fam_Rtb_pub" {
   vpc_id = aws_vpc.Transfer_Fam_VPC.id
   tags = {
-    Name = "Transfer_Fam_Rtb"
+    Name = "Transfer_Fam_Rtb_pub"
   }
 }
 
-resource "aws_route" "Transfer_Fam_Rt" {
-  route_table_id         = aws_route_table.Transfer_Fam_Rtb.id
+resource "aws_route_table" "Transfer_Fam_Rtb_pri" {
+  vpc_id = aws_vpc.Transfer_Fam_VPC.id
+  tags = {
+    Name = "Transfer_Fam_Rtb_pri"
+  }
+}
+
+resource "aws_route" "Transfer_Fam_Rt_pub" {
+  route_table_id         = aws_route_table.Transfer_Fam_Rtb_pub.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.Transfer_Fam_Igw.id
 }
 
 resource "aws_route_table_association" "Transfer_Fam_Rtb_ass-pub" {
-  route_table_id = aws_route_table.Transfer_Fam_Rtb.id
+  route_table_id = aws_route_table.Transfer_Fam_Rtb_pub.id
   subnet_id      = aws_subnet.Transfer_Fam_Public.id
 }
 
 resource "aws_route_table_association" "Transfer_Fam_Rtb_ass-pri" {
-  route_table_id = aws_route_table.Transfer_Fam_Rtb.id
+  route_table_id = aws_route_table.Transfer_Fam_Rtb_pri.id
   subnet_id      = aws_subnet.Transfer_Fam_Private.id
 }
 
@@ -294,7 +301,7 @@ resource "aws_vpc_endpoint" "Transfer_Fam_Vpc_Ep" {
   vpc_id            = aws_vpc.Transfer_Fam_VPC.id
   vpc_endpoint_type = "Gateway"
   service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids   = [aws_route_table.Transfer_Fam_Rtb.id]
+  route_table_ids   = [aws_route_table.Transfer_Fam_Rtb_pub.id]
   tags = {
     Name = "Transfer_Fam_Vpc_Ep"
   }
@@ -456,7 +463,7 @@ resource "aws_acm_certificate" "Athena_Pipeline_server_cert" {
   }
   domain_name = "athena.manoj-techworks.site"
   validation_method = "DNS"
-  key_algorithm = "RSA"
+  key_algorithm = "RSA_4096"
 }
 
 resource "aws_transfer_server" "Athena_Pipeline_server" {
@@ -469,8 +476,8 @@ resource "aws_transfer_server" "Athena_Pipeline_server" {
   endpoint_type = "VPC"
   endpoint_details {
     vpc_id = aws_vpc.Transfer_Fam_VPC.id
-    subnet_ids = [aws_subnet.Transfer_Fam_Public]
-    security_group_ids = aws_security_group.transfer_family_sg.id
+    subnet_ids = [aws_subnet.Transfer_Fam_Public.id]
+    security_group_ids = [aws_security_group.transfer_family_sg.id]
   }
   domain = "S3"
 }
