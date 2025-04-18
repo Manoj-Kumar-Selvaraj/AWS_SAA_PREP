@@ -1,0 +1,51 @@
+State,Full State Name,Region
+AL,Alabama,South
+AK,Alaska,Pacific
+AZ,Arizona,Mountain
+AR,Arkansas,South
+CA,California,Pacific
+CO,Colorado,Mountain
+CT,Connecticut,New_England
+DC,District of Columbia,Mid_Atlantic
+DE,Delaware,South
+FL,Florida,South
+GA,Georgia,South
+HI,Hawaii,Pacific
+ID,Idaho,Mountain
+IL,Illinois,Midwest
+IN,Indiana,Midwest
+IA,Iowa,Midwest
+KS,Kansas,Midwest
+KY,Kentucky,South
+LA,Louisiana,South
+ME,Maine,New_England
+MD,Maryland,South
+MA,Massachusetts,New_England
+MN,Minnesota,Midwest
+MS,Mississippi,South
+MO,Missouri,Midwest
+MT,Montana,Mountain
+NE,Nebraska,Midwest
+NV,Nevada,Mountain
+NH,New Hampshire,New England
+NJ,New Jersey,Mid_Atlantic
+NM,New Mexico,Mountain
+NY,New York,Mid_Atlantic
+NC,North Carolina,South
+ND,North Dakota,Midwest
+OH,Ohio,Midwest
+OK,Oklahoma,South
+OR,Oregon,Pacific
+PA,Pennsylvania,Mid_Atlantic
+RI,Rhode Island,New_England
+SC,South Carolina,South
+SD,South Dakota,Midwest
+TN,Tennessee,South
+TX,Texas,South
+UT,Utah,Mountain
+VT,Vermont,New_England
+VA,Virginia,South
+WA,Washington,Pacific
+WV,West Virginia,South
+WI,Wisconsin,Midwest
+WY,Wyoming,Mountain
