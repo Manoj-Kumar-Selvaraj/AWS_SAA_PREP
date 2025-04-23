@@ -8,6 +8,7 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
+/Keys/*
 
 # Crash log files
 crash.log
