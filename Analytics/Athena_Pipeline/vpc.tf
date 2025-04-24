@@ -20,11 +20,11 @@ resource "aws_vpc_ipam_pool_cidr" "Transfer_Fam_ipam_pool_cidr" {
 }
 
 resource "aws_vpc" "Transfer_Fam_VPC" {
-  ipv4_netmask_length   = 16
-  ipv4_ipam_pool_id     = aws_vpc_ipam_pool.Transfer_Fam_ipam_pool.id
-  instance_tenancy      = "default"
-  enable_dns_hostnames  = true
-  enable_dns_support    = true
+  ipv4_netmask_length  = 16
+  ipv4_ipam_pool_id    = aws_vpc_ipam_pool.Transfer_Fam_ipam_pool.id
+  instance_tenancy     = "default"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
   tags = {
     Name = "Transfer_Fam_VPC"
   }
@@ -107,7 +107,7 @@ resource "aws_cloudwatch_log_group" "Transfer_Fam_Vpc_Lg_Grp" {
   skip_destroy = false
   # kms_key_id
   retention_in_days = 14
-  log_group_class = "STANDARD"
+  log_group_class   = "STANDARD"
 }
 
 resource "aws_iam_role" "flow_log_role" {
@@ -143,8 +143,8 @@ resource "aws_iam_role_policy" "flow_log_policy" {
 }
 
 resource "aws_flow_log" "Transfer_Fam_Vpc_Fl_Lg" {
-  iam_role_arn    = aws_iam_role.flow_log_role.arn
-  log_destination = aws_cloudwatch_log_group.Transfer_Fam_Vpc_Lg_Grp.arn
+  iam_role_arn         = aws_iam_role.flow_log_role.arn
+  log_destination      = aws_cloudwatch_log_group.Transfer_Fam_Vpc_Lg_Grp.arn
   log_destination_type = "cloud-watch-logs"
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.Transfer_Fam_VPC.id
@@ -224,22 +224,22 @@ resource "aws_network_acl" "transfer_family_nacl" {
   dynamic "ingress" {
     for_each = var.allowed_ingress
     content {
-      rule_no = ingress.key + 100
-      protocol    = ingress.value.protocol
-      action = "allow"
-      cidr_block  = ingress.value.cidr_blocks[0]
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
+      rule_no    = ingress.key + 100
+      protocol   = ingress.value.protocol
+      action     = "allow"
+      cidr_block = ingress.value.cidr_blocks[0]
+      from_port  = ingress.value.from_port
+      to_port    = ingress.value.to_port
     }
   }
 
   egress {
-    rule_no = 100
-    protocol    = "-1"
-    action = "allow"
-    cidr_block  = "0.0.0.0/0"
-    from_port   = 0
-    to_port     = 0
+    rule_no    = 100
+    protocol   = "-1"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
   }
 
   tags = {

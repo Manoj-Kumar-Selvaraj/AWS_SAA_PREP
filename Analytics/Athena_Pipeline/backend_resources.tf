@@ -1,13 +1,13 @@
 resource "aws_s3_bucket" "Athena_Backend_Manager" {
-  bucket = "athena-backend-manager-${random_integer.random_int.result}"
+  bucket              = "athena-backend-manager-${random_integer.random_int.result}"
   object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_public_access_block" "Athena_Backend_Manager_Block_Public" {
-  bucket = aws_s3_bucket.Athena_Backend_Manager.id
-  ignore_public_acls = true
-  block_public_acls = true
-  block_public_policy = false
+  bucket                  = aws_s3_bucket.Athena_Backend_Manager.id
+  ignore_public_acls      = true
+  block_public_acls       = true
+  block_public_policy     = false
   restrict_public_buckets = true
 }
 
@@ -33,8 +33,8 @@ resource "aws_s3_bucket_policy" "terraform_state_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid       = "AllowTerraformUserAccess",
-        Effect    = "Allow",
+        Sid    = "AllowTerraformUserAccess",
+        Effect = "Allow",
         Principal = {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${data.aws_iam_user.current.user_name}"
         },

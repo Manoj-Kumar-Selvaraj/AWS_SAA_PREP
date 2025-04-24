@@ -6,7 +6,7 @@ resource "aws_s3_bucket" "Athena_Test_Logging_Target" {
 }
 
 resource "aws_s3_bucket_public_access_block" "logging_target_block" {
-  bucket = aws_s3_bucket.Athena_Test_Logging_Target.id
+  bucket                  = aws_s3_bucket.Athena_Test_Logging_Target.id
   block_public_acls       = true
   ignore_public_acls      = true
   block_public_policy     = true
@@ -24,7 +24,7 @@ resource "aws_s3_bucket_policy" "logging_target_policy" {
         Principal = {
           Service = "logging.s3.amazonaws.com"
         },
-        Action = "s3:PutObject",
+        Action   = "s3:PutObject",
         Resource = "${aws_s3_bucket.Athena_Test_Logging_Target.arn}/athena-access-logs/*",
         Condition = {
           StringEquals = {

@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "Athena_Test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "athena_test_block" {
-  bucket = aws_s3_bucket.Athena_Test.id
+  bucket                  = aws_s3_bucket.Athena_Test.id
   block_public_acls       = true
   ignore_public_acls      = true
   block_public_policy     = false
@@ -24,7 +24,7 @@ resource "aws_s3_bucket_versioning" "athena_test_block_versioning" {
 resource "aws_s3_bucket_lifecycle_configuration" "athena_test_block_lifecycle_config" {
   bucket = aws_s3_bucket.Athena_Test.id
   rule {
-    id     = "rule1"
+    id = "rule1"
     filter { prefix = "" }
     transition {
       days          = 30
