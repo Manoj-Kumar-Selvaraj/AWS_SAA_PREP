@@ -79,7 +79,7 @@ resource "aws_iam_role_policy" "transfer_workflow_lambda_invoke" {
         Action = [
           "lambda:InvokeFunction"
         ],
-        Resource = aws_lambda_function.decrypt_csv_lambda.arn
+        Resource = aws_lambda_function.transfer_family_workflow.arn
       }
     ]
   })

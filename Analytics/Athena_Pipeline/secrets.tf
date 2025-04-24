@@ -1,6 +1,3 @@
-variable "pgp_private_key" {}
-variable "pgp_passphrase" {}
-
 # Store PGP Private Key
 resource "aws_secretsmanager_secret" "athena_pgp_key" {
   name        = "AthenaPGPPrivateKey"

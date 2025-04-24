@@ -3,3 +3,8 @@ variable "pgp_private_key" {
   type        = string
   sensitive   = true
 }
+
+variable "pgp_passphrase" {
+  type        = string
+  sensitive   = true
+}
