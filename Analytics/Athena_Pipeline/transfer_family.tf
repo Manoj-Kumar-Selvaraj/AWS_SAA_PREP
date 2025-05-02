@@ -2,7 +2,7 @@
 resource "aws_acm_certificate" "Athena_Pipeline_server_cert" {
   domain_name       = "athena.manoj-techworks.site"
   validation_method = "DNS"
-  key_algorithm     = "RSA_4096"
+  key_algorithm     = "RSA_2048"
 
   tags = {
     Name = "Athena_Pipeline_server_cert"
@@ -12,10 +12,10 @@ resource "aws_acm_certificate" "Athena_Pipeline_server_cert" {
 # Route53 Hosted Zone (Private)
 resource "aws_route53_zone" "Athena_Pipeline_Zone" {
   name = "athena.manoj-techworks.site"
-
-  vpc {
-    vpc_id = aws_vpc.Transfer_Fam_VPC.id
-  }
+  # Private Hosted zones wont work for DNS validation
+  #vpc {
+  # vpc_id = aws_vpc.Transfer_Fam_VPC.id
+  #}
 
   tags = {
     Name = "Athena_Private_Zone"
@@ -44,7 +44,6 @@ resource "aws_acm_certificate_validation" "cert" {
   certificate_arn         = aws_acm_certificate.Athena_Pipeline_server_cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
-
 
 # Transfer Family Workflow Terraform Configuration
 
@@ -80,6 +79,15 @@ resource "aws_iam_role_policy" "transfer_workflow_lambda_invoke" {
           "lambda:InvokeFunction"
         ],
         Resource = aws_lambda_function.transfer_family_workflow.arn
+      },
+      {
+        Sid    = "S3Policy"
+        Action = ["s3:PutObject", "s3:ListBucket", "s3:GetObject"]
+        Effect = "Allow"
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.Athena_Test.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.Athena_Test.bucket}/*"
+        ]
       }
     ]
   })
@@ -109,17 +117,18 @@ resource "aws_transfer_server" "Athena_Pipeline_server" {
   depends_on = [aws_acm_certificate_validation.cert]
 
   identity_provider_type = "SERVICE_MANAGED"
-  endpoint_type          = "VPC"
-  protocols              = ["SFTP", "FTPS"]
-  certificate            = aws_acm_certificate.Athena_Pipeline_server_cert.arn
-  domain                 = "S3"
-
+  # endpoint_type          = "VPC"
+  # endpoint_type          = "PUBLIC"
+  protocols   = ["SFTP"]
+  certificate = aws_acm_certificate.Athena_Pipeline_server_cert.arn
+  domain      = "S3"
+  /*
   endpoint_details {
     vpc_id             = aws_vpc.Transfer_Fam_VPC.id
     subnet_ids         = [aws_subnet.Transfer_Fam_Public.id]
     security_group_ids = [aws_security_group.transfer_family_sg.id]
   }
-
+*/
   workflow_details {
     on_upload {
       workflow_id    = aws_transfer_workflow.aws_transfer_workflow.id
@@ -131,4 +140,36 @@ resource "aws_transfer_server" "Athena_Pipeline_server" {
     Name = "Athena_Pipeline_server"
   }
 }
+
+# Fetch the public key from Secrets Manager
+data "aws_secretsmanager_secret" "transfer_user_public_key" {
+  name = "TransferUserPublicKey" # The name of the secret
+}
+
+data "aws_secretsmanager_secret_version" "transfer_user_public_key_version" {
+  secret_id = data.aws_secretsmanager_secret.transfer_user_public_key.id
+}
+
+# AWS Transfer Family User (SFTP Example)
+resource "aws_transfer_user" "transfer_user_sftp" {
+  user_name      = "onprem-sftp-user"
+  server_id      = aws_transfer_server.Athena_Pipeline_server.id
+  role           = aws_iam_role.transfer_workflow_role.arn
+  home_directory = "/${aws_s3_bucket.Athena_Test.bucket}/uploads"
+  # ssh_public_key_body = file("~/.ssh/id_rsa.pub") # Path to your SSH public key file
+
+  tags = {
+    Name = "Transfer_User"
+  }
+}
+
+# Add SSH Public Key separately
+resource "aws_transfer_ssh_key" "onprem_user_key" {
+  server_id = aws_transfer_server.Athena_Pipeline_server.id
+  user_name = aws_transfer_user.transfer_user_sftp.user_name
+  # Use the public key for authentication
+  body = data.aws_secretsmanager_secret_version.transfer_user_public_key_version.secret_string
+}
+
+
 

@@ -1,0 +1,70 @@
+# aws_s3_bucket.Athena_Backend_Manager:
+resource "aws_s3_bucket" "Athena_Backend_Manager" {
+    acceleration_status         = [90mnull[0m[0m
+    arn                         = "arn:aws:s3:::athena-backend-manager-1144"
+    bucket                      = "athena-backend-manager-1144"
+    bucket_domain_name          = "athena-backend-manager-1144.s3.amazonaws.com"
+    bucket_prefix               = [90mnull[0m[0m
+    bucket_regional_domain_name = "athena-backend-manager-1144.s3.us-east-1.amazonaws.com"
+    force_destroy               = false
+    hosted_zone_id              = "Z3AQBSTGFYJSTF"
+    id                          = "athena-backend-manager-1144"
+    object_lock_enabled         = true
+    policy                      = jsonencode(
+        {
+            Statement = [
+                {
+                    Action    = [
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:DeleteObject",
+                        "s3:ListBucket",
+                    ]
+                    Effect    = "Allow"
+                    Principal = {
+                        AWS = "arn:aws:iam::686255975511:user/Athena_Pipeline"
+                    }
+                    Resource  = [
+                        "arn:aws:s3:::athena-backend-manager-1144",
+                        "arn:aws:s3:::athena-backend-manager-1144/*",
+                    ]
+                    Sid       = "AllowTerraformUserAccess"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    region                      = "us-east-1"
+    request_payer               = "BucketOwner"
+    tags                        = {}
+    tags_all                    = {}
+
+    grant {
+        id          = "a44ea7da13995ea52abef64962767ccd9fcb00d6b14c18785ecab7006d7c7c52"
+        permissions = [
+            "FULL_CONTROL",
+        ]
+        type        = "CanonicalUser"
+        uri         = [90mnull[0m[0m
+    }
+
+    object_lock_configuration {
+        object_lock_enabled = "Enabled"
+    }
+
+    server_side_encryption_configuration {
+        rule {
+            bucket_key_enabled = false
+
+            apply_server_side_encryption_by_default {
+                kms_master_key_id = [90mnull[0m[0m
+                sse_algorithm     = "AES256"
+            }
+        }
+    }
+
+    versioning {
+        enabled    = true
+        mfa_delete = false
+    }
+}

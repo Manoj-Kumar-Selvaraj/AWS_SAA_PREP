@@ -22,7 +22,7 @@ resource "aws_iam_role" "glue_crawler_role" {
 resource "aws_iam_policy" "glue_s3_custom" {
   name        = "glue_s3_access_to_athena_pipeline"
   description = "Allow Glue to access only the Athena pipeline data bucket"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -57,10 +57,9 @@ resource "aws_glue_crawler" "athena_pipeline_crawler" {
   role          = aws_iam_role.glue_crawler_role.arn
   database_name = aws_glue_catalog_database.athena_pipeline_db.name
   table_prefix  = "pipeline_"
-  schedule      = "cron(0/15 * * * ? *)"
 
   s3_target {
-    path = "s3://${aws_s3_bucket.Athena_Test.bucket}/raw/"
+    path = "s3://${aws_s3_bucket.Athena_Test.bucket}/decrypted/"
   }
 
   depends_on = [

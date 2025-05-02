@@ -1,3 +1,5 @@
+
+
 resource "aws_vpc_ipam" "Transfer_Fam_ipam" {
   operating_regions {
     region_name = data.aws_region.current.name
@@ -67,7 +69,6 @@ resource "aws_route_table" "Transfer_Fam_Rtb_pub" {
   }
 }
 
-
 resource "aws_route_table" "Transfer_Fam_Rtb_pri" {
   vpc_id = aws_vpc.Transfer_Fam_VPC.id
   tags = {
@@ -102,10 +103,8 @@ resource "aws_vpc_endpoint" "Transfer_Fam_Vpc_Ep" {
 }
 
 resource "aws_cloudwatch_log_group" "Transfer_Fam_Vpc_Lg_Grp" {
-  name = "Vpc/flow-logs"
-  # If set to true, wont be destroyed while giving destroy command ans its just been removed from state
-  skip_destroy = false
-  # kms_key_id
+  name              = "Vpc/flow-logs"
+  skip_destroy      = false
   retention_in_days = 14
   log_group_class   = "STANDARD"
 }
@@ -246,4 +245,3 @@ resource "aws_network_acl" "transfer_family_nacl" {
     Name = "Transfer_Fam_NACL"
   }
 }
-

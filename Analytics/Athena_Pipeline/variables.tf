@@ -5,6 +5,12 @@ variable "pgp_private_key" {
 }
 
 variable "pgp_passphrase" {
-  type        = string
+  type      = string
+  sensitive = true
+}
+
+variable "trans_server_user_pass" {
   sensitive   = true
+  description = "Password for setting up transfer family user"
+  type        = string
 }
