@@ -1,0 +1,44 @@
+{
+    "FunctionName": "DATESTFUN",
+    "FunctionArn": "arn:aws:lambda:us-east-1:686255975511:function:DATESTFUN",
+    "Runtime": "python3.8",
+    "Role": "arn:aws:iam::686255975511:role/Lambda-Role",
+    "Handler": "lambda_function.lambda_handler",
+    "CodeSize": 346,
+    "Description": "",
+    "Timeout": 3,
+    "MemorySize": 128,
+    "LastModified": "2025-05-27T18:07:41.000+0000",
+    "CodeSha256": "zWzFC5Ht0YA7L38vmZGl0whDKViDgwpE2UFzNTZ29As=",
+    "Version": "$LATEST",
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "c687a334-936d-4dfa-9e1d-92c0772b9346",
+    "Layers": [
+        {
+            "Arn": "arn:aws:lambda:us-east-1:686255975511:layer:DATESTLA:1",
+            "CodeSize": 430
+        }
+    ],
+    "State": "Active",
+    "LastUpdateStatus": "Successful",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:us-east-1::runtime:bf94bf0bf112fb7422359caa6a0e6a71a87ab2d59c36824e5a3c27f5cdaed8fe"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/DATESTFUN"
+    }
+}
