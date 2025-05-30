@@ -229,3 +229,178 @@ If a user or Lambda can’t encrypt/decrypt even though IAM allows it →
 
 ---
 
+Excellent choice — **Amazon Cognito** is highly testable in the **AWS Developer Associate** exam, especially for mobile/web app scenarios. It's your go-to for **user authentication**, **authorization**, and **federated identities**.
+
+---
+
+## 🔐 Amazon Cognito — Developer-Focused Breakdown
+
+---
+
+### 📌 What Is Amazon Cognito?
+
+> Cognito provides user sign-up, sign-in, and access control for web and mobile apps.
+
+---
+
+### 🧱 Two Main Components
+
+| Component                                 | Purpose                                                 |
+| ----------------------------------------- | ------------------------------------------------------- |
+| **User Pools**                            | User directory for managing sign-up/sign-in             |
+| **Identity Pools** (Federated Identities) | Grants temporary AWS credentials to access AWS services |
+
+---
+
+### 🔑 1. Cognito **User Pools**
+
+Think of it like:
+🔐 **Login System + User Management** (email/phone sign-up, passwords, MFA, etc.)
+
+#### 💡 Key Features:
+
+* Customizable **sign-up/sign-in UI**
+* Built-in **MFA**, **password policies**
+* Can integrate with:
+
+  * Google, Facebook, Apple (social identity providers)
+  * SAML / OIDC (enterprise identity)
+* Returns **JWT tokens**: `id_token`, `access_token`, `refresh_token`
+
+#### ✅ Exam Tip:
+
+> Use **User Pool** when you need to **authenticate users** (e.g., login to your web/mobile app).
+
+---
+
+### 🔁 2. Cognito **Identity Pools**
+
+Think of it like:
+🎫 **Ticket system for temporary AWS access**
+
+#### 💡 Purpose:
+
+* Provides **temporary AWS credentials** via **STS**
+* Authenticated via:
+
+  * User Pools
+  * Facebook/Google logins
+  * IAM roles for anonymous or guest users
+
+#### ✅ Exam Tip:
+
+> Use **Identity Pool** when your app users need access to **AWS resources (e.g., S3, DynamoDB)** after logging in.
+
+---
+
+### 🧠 Example: Common Pattern in Exams
+
+1. User signs in via **Cognito User Pool** → gets JWT token
+2. Token sent to **Identity Pool**
+3. Identity Pool returns **temporary credentials** via STS
+4. User uses those to access S3, DynamoDB, etc.
+
+---
+
+### ⚙️ Developer Flow (Simplified)
+
+```text
+[ User ] → signs in with → [ Cognito User Pool ]
+           ↓
+[ JWT Token ] → sent to → [ Identity Pool ]
+                      ↓
+[ STS ] → returns temporary AWS credentials
+                      ↓
+[ Access AWS Services (S3, DynamoDB, etc.) ]
+```
+
+---
+
+### 🔐 Security Features
+
+| Feature             | Notes                                                              |
+| ------------------- | ------------------------------------------------------------------ |
+| MFA                 | Built-in for User Pools                                            |
+| Token expiration    | Access tokens (1 hour), Refresh tokens (30 days)                   |
+| IAM Roles           | Identity Pool assigns roles to authenticated/unauthenticated users |
+| Fine-grained access | Use Cognito groups or role mapping for access control              |
+
+---
+
+## ✅ Summary Table
+
+| Use Case                                | Use                                      |
+| --------------------------------------- | ---------------------------------------- |
+| User login/signup                       | Cognito **User Pool**                    |
+| Social login (Facebook, Google)         | User Pool or Federated IdP               |
+| Access S3 from web app after login      | **Identity Pool** (uses STS)             |
+| MFA, email verification, password reset | Cognito **User Pool**                    |
+| Guest access to S3                      | **Identity Pool** (unauthenticated role) |
+
+---
+
+### 🔍 Practice Question
+
+> Your mobile app requires users to log in using email/password. After login, the app must allow users to upload images to S3. Which combination of Cognito components should you use?
+
+A) User Pool only
+B) Identity Pool only
+C) User Pool + Identity Pool
+D) IAM User per app user
+
+Correct answer: **C** ✅
+
+---
+
+Awesome — **Secrets Manager vs SSM Parameter Store** is another **heavily tested** comparison in the AWS Developer Associate exam. Let’s break it down side-by-side.
+
+---
+
+## 🔐 Secrets Manager vs SSM Parameter Store
+
+| Feature                   | **AWS Secrets Manager**                            | **SSM Parameter Store**                       |
+| ------------------------- | -------------------------------------------------- | --------------------------------------------- |
+| **Purpose**               | Store and manage **secrets** (DB creds, API keys)  | Store **configuration data** and **secrets**  |
+| **Secret Rotation**       | ✅ **Built-in automatic rotation** via Lambda       | ❌ Manual rotation only                        |
+| **Data Type**             | Secrets (key-value pairs)                          | Parameters (String, StringList, SecureString) |
+| **Encryption**            | ✅ KMS                                              | ✅ KMS                                         |
+| **Audit with CloudTrail** | ✅                                                  | ✅                                             |
+| **Versioning**            | ✅ (built-in)                                       | ✅ (supports versions)                         |
+| **Integration with RDS**  | ✅ Native (auto rotates RDS creds)                  | ❌ No built-in rotation                        |
+| **Pricing**               | 💰 **Paid** (\~\$0.40/month/secret)                | ✅ **Free** for standard; advanced is paid     |
+| **Max Size**              | 64 KB per secret                                   | 4 KB (standard), 8 KB (advanced)              |
+| **API Access**            | `GetSecretValue`                                   | `GetParameter`                                |
+| **Use case**              | Secrets that need **rotation** & **secure access** | Config values, feature flags, small secrets   |
+
+---
+
+### 🔑 Summary in Simple Terms:
+
+* 🔐 **Secrets Manager** = For **sensitive secrets** (DB passwords, tokens) with auto-rotation needs
+* ⚙️ **SSM Parameter Store** = For **general app configs** or **non-rotating secrets**
+
+---
+
+### 🎯 Exam Traps to Watch
+
+| Scenario                                         | Use                                          |
+| ------------------------------------------------ | -------------------------------------------- |
+| You need to rotate RDS credentials automatically | ✅ **Secrets Manager**                        |
+| Store an app’s config flags                      | ✅ **SSM Parameter Store**                    |
+| Need to store a 2KB API key securely             | ✅ Either (Secrets Manager more feature-rich) |
+| You want a **free** secret store                 | ✅ **SSM Parameter Store - Standard tier**    |
+
+---
+
+### 🔥 Practice Question
+
+> You're building a Lambda function that needs to securely access an API key. The API key will rotate automatically every 30 days. What service should you use?
+
+A) S3
+B) IAM
+C) SSM Parameter Store
+D) Secrets Manager
+
+✅ **Answer: D — Secrets Manager**
+
+---
