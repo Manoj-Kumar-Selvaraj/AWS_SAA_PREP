@@ -1437,5 +1437,126 @@ For Developer Associate:
 
 ---
 
+---
+
+## ✅ 🔹 ECS (Elastic Container Service)
+
+### 1. **What is the difference between Task Role and Execution Role?**
+
+* **Task Role**: Grants permissions **to the application inside the container**, such as access to S3, DynamoDB, etc.
+* **Execution Role**: Grants ECS permission to **pull images from ECR, write logs to CloudWatch**, and other ECS-level actions.
+
+🧠 *Tip: Task role = app’s permissions; Execution role = ECS system permissions.*
+
+---
+
+### 2. **When would you choose Fargate over EC2 launch type?**
+
+* Choose **Fargate** when you want **serverless containers** (no EC2 provisioning, scaling, or patching).
+* Ideal for **smaller, event-driven apps**, or **apps with unpredictable traffic**.
+
+---
+
+### 3. **What AWS service is used for Blue/Green deployments in ECS?**
+
+* **AWS CodeDeploy**
+  It supports Blue/Green deployments for ECS (especially **ECS with Fargate** using **Application Load Balancer**).
+
+---
+
+### 4. **How does ECS integrate with a Load Balancer on EC2 launch type?**
+
+* ECS creates **target groups** for services, and **registers EC2-hosted containers** as targets.
+* ALB/NLB routes requests to containers running on EC2 instances.
+
+---
+
+### 5. **What is a Capacity Provider in ECS?**
+
+* A way to define **how ECS can provision infrastructure** for tasks (EC2 or Fargate).
+* Helps ECS **auto-scale EC2 instances** or choose between **Fargate and Fargate Spot**.
+
+🧠 *ECS Capacity Providers = resource supply logic.*
+
+---
+
+## ✅ 🔹 EKS (Elastic Kubernetes Service)
+
+### 6. **What does IRSA stand for and why is it important?**
+
+* **IRSA = IAM Roles for Service Accounts**
+* It allows **Kubernetes pods to securely access AWS services** using IAM roles, without attaching permissions to the entire node.
+
+---
+
+### 7. **What is the default networking model used by EKS?**
+
+* **Amazon VPC CNI Plugin**
+* Each pod gets a **VPC-level IP address**, enabling native AWS networking and security features.
+
+---
+
+### 8. **How do you authenticate to an EKS cluster?**
+
+* Using **IAM-based authentication** via `aws eks update-kubeconfig`
+* Behind the scenes, EKS uses **`aws-auth` ConfigMap** to map IAM identities to Kubernetes RBAC.
+
+---
+
+### 9. **What is the purpose of Cluster Autoscaler vs Horizontal Pod Autoscaler?**
+
+| Feature       | Cluster Autoscaler | Horizontal Pod Autoscaler                |
+| ------------- | ------------------ | ---------------------------------------- |
+| Scales Nodes? | ✅ Yes              | ❌ No                                     |
+| Scales Pods?  | ❌ No               | ✅ Yes                                    |
+| Works on      | Node level         | Pod level                                |
+| Based on      | Pending Pods       | CPU/Memory utilization or custom metrics |
+
+---
+
+### 10. **What is the difference between EKS on EC2 and EKS on Fargate?**
+
+* **EKS on EC2**: You manage worker nodes; more control and cost-effective at scale.
+* **EKS on Fargate**: AWS manages compute; simpler, but **not all K8s features are supported**.
+
+🧠 *Use EKS Fargate when you want serverless Kubernetes with limited operational burden.*
+
+---
+
+## ✅ 🔹 ECR (Elastic Container Registry)
+
+### 11. **What command is used to authenticate Docker to ECR?**
+
+```bash
+aws ecr get-login-password | docker login --username AWS --password-stdin <your-registry>
+```
+
+---
+
+### 12. **How does ECR image scanning help improve security?**
+
+* ECR uses **Amazon Inspector** or **open-source Clair** to **scan images for vulnerabilities** in OS packages and libraries.
+
+---
+
+### 13. **What is a lifecycle policy in ECR?**
+
+* A rule that **automatically deletes old or unused images**, such as untagged images older than 30 days.
+
+---
+
+### 14. **Why use tag immutability in ECR?**
+
+* Prevents overwriting tags like `latest`, ensuring **image integrity and traceability** in production.
+
+---
+
+### 15. **Can you replicate ECR images across regions?**
+
+* ✅ **Yes**, using **cross-region replication**.
+* Helps with **multi-region deployments** and **high availability**.
+
+---
+
 
 
