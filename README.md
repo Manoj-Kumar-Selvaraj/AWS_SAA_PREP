@@ -1558,5 +1558,122 @@ aws ecr get-login-password | docker login --username AWS --password-stdin <your-
 
 ---
 
+---
+
+## ✅ ECS Questions
+
+### 1. **Your ECS task running on Fargate needs to access an S3 bucket. What is the correct IAM strategy?**
+
+A. Attach an S3 access policy to the ECS execution role
+B. Attach an S3 access policy to the ECS task role
+C. Attach the policy to the container
+D. Grant access via EC2 instance profile
+
+✅ **Answer:** **B** — The **task role** is used to grant permissions to the app inside the container.
+
+---
+
+### 2. **You want to schedule ECS tasks based on a cron schedule without running a full-time service. What should you use?**
+
+A. ECS Service
+B. Lambda function
+C. CloudWatch Event Rule with ECS Task
+D. ECS Fargate Spot
+
+✅ **Answer:** **C** — Use **EventBridge (formerly CloudWatch Events)** to trigger scheduled ECS Tasks.
+
+---
+
+### 3. **Which ECS launch type should you choose if you need the most granular control over your underlying infrastructure?**
+
+A. Fargate
+B. EC2
+C. Lambda
+D. App Runner
+
+✅ **Answer:** **B** — **EC2 launch type** provides full control over instances, networking, and costs.
+
+---
+
+### 4. **What AWS service enables Blue/Green deployments for ECS with minimal downtime and automated rollback support?**
+
+A. Elastic Beanstalk
+B. CloudFormation
+C. CodeDeploy
+D. CodePipeline
+
+✅ **Answer:** **C** — **CodeDeploy** supports **Blue/Green** deployments for ECS.
+
+---
+
+### 5. **In ECS, a capacity provider helps with:**
+
+A. Assigning IAM roles to ECS containers
+B. Managing how ECS schedules tasks on compute infrastructure
+C. Encrypting data at rest
+D. Monitoring container logs in CloudWatch
+
+✅ **Answer:** **B** — Capacity providers let ECS manage infrastructure (e.g., Fargate, EC2 Auto Scaling).
+
+---
+
+## ✅ EKS Questions
+
+### 6. **What allows EKS pods to assume IAM roles without granting permissions to the node itself?**
+
+A. Instance Profile
+B. IRSA
+C. kubeconfig
+D. RBAC
+
+✅ **Answer:** **B** — **IRSA** (IAM Roles for Service Accounts) enables pod-level IAM permissions.
+
+---
+
+### 7. **Which component in EKS maps IAM roles to Kubernetes users and groups?**
+
+A. IAM policy
+B. aws-auth ConfigMap
+C. EKS RoleBinding
+D. VPC CNI plugin
+
+✅ **Answer:** **B** — `aws-auth` ConfigMap controls IAM to Kubernetes user mapping.
+
+---
+
+### 8. **Which scaling mechanism in EKS adjusts the number of nodes in a cluster?**
+
+A. Cluster Autoscaler
+B. Horizontal Pod Autoscaler
+C. Vertical Pod Autoscaler
+D. Launch Template
+
+✅ **Answer:** **A** — Cluster Autoscaler manages **nodes** based on pending pods.
+
+---
+
+## ✅ ECR Questions
+
+### 9. **Your company requires that no developer overwrites container image tags like `v1.0`. What feature in ECR enforces this?**
+
+A. Encryption at rest
+B. Repository policy
+C. Image tag immutability
+D. Lifecycle policy
+
+✅ **Answer:** **C** — **Tag immutability** prevents overwriting existing tags like `v1.0`.
+
+---
+
+### 10. **To reduce costs and keep your ECR registry clean, how can you automatically remove unused images?**
+
+A. Apply an encryption policy
+B. Use a registry replication rule
+C. Use lifecycle policies
+D. Enable scan on push
+
+✅ **Answer:** **C** — **Lifecycle policies** can remove old or untagged images automatically.
+
+---
 
 
