@@ -160,3 +160,5 @@ Can be enabled/disabled
 
 🧠 Analogy:
 Like subscribing your Lambda to a messaging service. When messages arrive, Lambda is auto-notified and runs.
+
+## Default Permission in lambda allows just to send logs to cloud watch
