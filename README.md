@@ -418,9 +418,6 @@ Absolutely! Here's a **clean and quick revision table** with **important AWS Aut
 | `CPUUtilization`            | CPU usage of EC2 instances           | Target Tracking / Step | Most common metric; e.g., keep CPU around 60%                 |
 | `RequestCountPerTarget`     | Requests per EC2 behind ALB          | Target Tracking / Step | Scale when traffic hits threshold; ALB only                   |
 | `NetworkIn`                 | Incoming data (bytes)                | Target Tracking / Step | For data-heavy applications (e.g., logs, uploads)             |
-                               he number of bytes received by a      |                         
-                               specific EC2 instance's network       | 
-                               interface                             | 
 | `NetworkOut`                | Outgoing data (bytes)                | Target Tracking / Step | For services pushing data (e.g., media servers)               |
 | `GroupDesiredCapacity`      | Desired # of EC2 in ASG              | Monitoring only        | Helps check expected number of running instances              |
 | `GroupInServiceInstances`   | Healthy EC2s in service              | Monitoring only        | Should equal desired capacity under normal conditions         |
@@ -431,7 +428,8 @@ Absolutely! Here's a **clean and quick revision table** with **important AWS Aut
 | `ScheduledActionsExecuted`  | Number of scheduled scaling actions  | Scheduled Scaling      | Useful to verify cron-based scaling worked                    |
 
 ---
-
+ `NetworkIn` --   The number of bytes received by a specific EC2 instance's network interface 
+ 
 ---
 
 # 📊 AWS Metrics — The Ultimate Guide for Exam Prep
