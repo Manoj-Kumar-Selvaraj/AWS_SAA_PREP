@@ -1049,7 +1049,9 @@ Absolutely! Here are some **advanced EC2 topics** you should know for the AWS De
 ---
 
 ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+                                                               
                                                                # ELASTIC BEANSTALK
+                                                            
 ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
 
 
@@ -1265,5 +1267,94 @@ Absolutely! Here are some **advanced EC2 topics** you should know for the AWS De
 * Remember `.ebextensions` for customizations and advanced configs.
 
 ---
+
+---
+---
+                                            # ECS, EKS, ECR
+
+---
+---
+
+Great choice! Let’s do a focused, exam-relevant deep dive into **EKS, ECR, and ECS** — covering key concepts, differences, and what AWS expects you to know for the Developer Associate exam.
+
+---
+
+# 1️⃣ **ECS (Elastic Container Service)**
+
+* **What it is:**
+  AWS’s fully managed container orchestration service for running Docker containers at scale.
+
+* **Modes:**
+
+  * **Fargate:** Serverless, no infrastructure to manage. You just provide containers, and AWS runs them.
+  * **EC2 Launch Type:** You manage the EC2 instances (worker nodes) yourself.
+
+* **Use case:**
+  Simple container workloads without the overhead of managing Kubernetes.
+  Great for apps requiring quick setup with AWS integrations.
+
+* **Key exam points:**
+
+  * Fargate = serverless containers, no need to manage EC2.
+  * ECS integrates with CloudWatch, ALB, IAM for security.
+  * Task Definitions define containers, CPU, memory, and IAM roles.
+  * Service ensures the desired number of tasks run and supports deployment strategies.
+
+---
+
+# 2️⃣ **ECR (Elastic Container Registry)**
+
+* **What it is:**
+  AWS’s private Docker container registry to store, manage, and deploy Docker container images.
+
+* **Key exam points:**
+
+  * Secure, scalable registry for storing container images.
+  * Integrated with IAM for access control.
+  * Supports image scanning for vulnerabilities.
+  * Works seamlessly with ECS, EKS, and Fargate.
+  * You push images using Docker CLI after authentication with `aws ecr get-login-password`.
+
+---
+
+# 3️⃣ **EKS (Elastic Kubernetes Service)**
+
+* **What it is:**
+  Managed Kubernetes service on AWS, fully compatible with standard Kubernetes.
+
+* **Key exam points:**
+
+  * Managed control plane (masters) by AWS — you manage worker nodes (EC2) or use Fargate for serverless pods.
+  * Supports all Kubernetes features and tooling.
+  * Higher learning curve than ECS but offers full Kubernetes flexibility.
+  * Integrates with IAM via IAM Roles for Service Accounts (IRSA) for fine-grained permissions.
+
+* **Use case:**
+  When you want Kubernetes compatibility and features but don’t want to manage masters. Good for multi-cloud or complex container orchestration needs.
+
+---
+
+# Quick Comparison Table
+
+| Feature         | ECS                     | EKS                            | ECR                             |
+| --------------- | ----------------------- | ------------------------------ | ------------------------------- |
+| Service Type    | Container Orchestration | Kubernetes Managed Service     | Container Image Registry        |
+| Control Plane   | AWS-managed             | AWS-managed                    | N/A                             |
+| Compute         | EC2 or Fargate          | EC2 or Fargate                 | N/A                             |
+| Complexity      | Lower                   | Higher                         | N/A                             |
+| Deployment Unit | Task / Service          | Pods / Deployments             | Container Images                |
+| IAM Integration | Task Roles              | IAM Roles for Service Accounts | IAM Policies                    |
+| Use Case        | Simple container apps   | Complex, Kubernetes workloads  | Store & manage container images |
+
+---
+
+**Exam Tip:**
+
+* Know that **ECS is AWS’s proprietary container orchestration** service — simpler than Kubernetes.
+* **EKS runs Kubernetes** on AWS with managed masters.
+* **ECR is just the container image repository.**
+
+---
+
 
 
