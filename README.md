@@ -83,7 +83,6 @@ Awesome — you're in the zone now! ⚡ Let's rapidly cover key **comparison-sty
 
 ---
  
- Perfect — let’s laser-focus on **Security**, which is a major domain in the **AWS Developer Associate** exam (DVA-C02). It shows up in **nearly every other question**, either directly or as part of the scenario.
 
 ---
 
@@ -112,8 +111,6 @@ Awesome — you're in the zone now! ⚡ Let's rapidly cover key **comparison-sty
 | **CloudWatch Logs** | Stores logs from Lambda, EC2, etc.     | Check for permissions and alarms  |
 
 ---
-
-Great! These two are super important and often **confuse** people in the exam. Let’s break them down with clear visuals and analogies.
 
 ---
 
