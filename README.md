@@ -440,7 +440,6 @@ Absolutely! Here's a **clean and quick revision table** with **important AWS Aut
 
 ---
 
-Perfect — you’re in full-on **exam crunch mode**, so let’s knock out all the **advanced/high-yield ASG + Launch Templates + Load Balancer** concepts that show up in the **AWS Developer Associate** exam.
 
 ---
 
