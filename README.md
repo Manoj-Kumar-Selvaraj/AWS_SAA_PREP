@@ -1676,4 +1676,1014 @@ D. Enable scan on push
 
 ---
 
+---
+---
+---
 
+## ✅ S3 – Exam-Critical Concepts
+
+---
+
+### 🔹 1. **S3 Basics**
+
+| Concept             | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| **Bucket**          | Global namespace (must be unique across AWS).   |
+| **Object**          | File stored in S3 (key + value + metadata).     |
+| **Key**             | Unique identifier for the object (like a path). |
+| **Storage Classes** | Choose based on access pattern and cost.        |
+| **Region-Specific** | Buckets are created in a specific region.       |
+
+---
+
+### 🔹 2. **Storage Classes (Very High Exam Focus)**
+
+| Class                      | Use Case                                        |
+| -------------------------- | ----------------------------------------------- |
+| **Standard**               | Frequently accessed.                            |
+| **IA (Infrequent Access)** | Less frequent, long-lived.                      |
+| **One Zone-IA**            | Single AZ, cost-effective, low durability.      |
+| **Intelligent-Tiering**    | Auto-moves data between tiers based on access.  |
+| **Glacier**                | Archival (mins to hours retrieval).             |
+| **Glacier Deep Archive**   | Cheapest for long-term (retrieval takes hours). |
+
+> 🧠 **Exam Tip**: Use Glacier for backups, **Intelligent-Tiering** for unpredictable patterns, and **One Zone-IA** when data is easily reproducible.
+
+---
+
+### 🔹 3. **S3 Security**
+
+| Feature                          | Description                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| **Bucket Policies**              | JSON IAM policies attached to buckets.                |
+| **IAM Policies**                 | Fine-grained access for users/roles.                  |
+| **ACL (Legacy)**                 | Not preferred now; use policies instead.              |
+| **Block Public Access**          | Blocks accidental public access (enabled by default). |
+| **SSE (Server Side Encryption)** | Encrypts data at rest. (See below)                    |
+
+#### 🔐 Server-Side Encryption Options:
+
+| Type        | Key Used                 | Notes                     |
+| ----------- | ------------------------ | ------------------------- |
+| **SSE-S3**  | Managed by AWS (AES-256) | Default, no setup needed. |
+| **SSE-KMS** | Customer-managed via KMS | Audit logs in CloudTrail. |
+| **SSE-C**   | Customer provides key    | AWS never stores the key. |
+
+> 🧠 **Exam Tip**: SSE-KMS is most secure & auditable, often mentioned in encryption scenarios.
+
+---
+
+### 🔹 4. **Access Control**
+
+* Use **presigned URLs** for temporary object access.
+* **Requester Pays** buckets: requester pays for data transfer.
+* Use **Access Points** for large-scale multi-application access.
+
+---
+
+### 🔹 5. **Versioning, MFA Delete, Lifecycle Rules**
+
+| Feature             | Purpose                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| **Versioning**      | Keep multiple versions of the same object.                      |
+| **MFA Delete**      | Prevent deletion without MFA.                                   |
+| **Lifecycle Rules** | Auto-transition or expire data (e.g., Standard → IA → Glacier). |
+
+> 🧠 **Exam Tip**: Versioning is **required for MFA Delete** and **important for rollback scenarios**.
+
+---
+
+### 🔹 6. **Cross-Region Replication (CRR)**
+
+* Automatically replicate objects to another bucket in another region.
+* Requires **versioning enabled** on both source and destination.
+
+---
+
+### 🔹 7. **Static Website Hosting**
+
+* Enable from bucket properties.
+* Needs `index.html` and optional `error.html`.
+* Must make bucket/object **public** (or use CloudFront for security).
+
+---
+
+### 🔹 8. **Event Notifications (S3 → Trigger)**
+
+| Integration | Use                          |
+| ----------- | ---------------------------- |
+| **SNS**     | Publish notification.        |
+| **SQS**     | Queue object change events.  |
+| **Lambda**  | Process files automatically. |
+
+> 🧠 **Exam Tip**: Use Lambda for serverless processing (e.g., auto-resize images).
+
+---
+
+### 🔹 9. **Performance Optimization**
+
+| Feature                      | Description                             |
+| ---------------------------- | --------------------------------------- |
+| **Multipart Upload**         | For files > 100MB (required > 5GB).     |
+| **Byte-Range Fetch**         | Download parts of a file in parallel.   |
+| **S3 Transfer Acceleration** | Speeds up uploads using edge locations. |
+
+---
+
+### 🔹 10. **Consistency Model**
+
+* **Strong consistency** for new and overwrite PUTs and DELETEs (no eventual consistency anymore).
+* Immediately available after upload/delete.
+
+---
+
+### 🧠 Quick Exam Revision Table
+
+| Topic                     | Quick Hint                                                     |
+| ------------------------- | -------------------------------------------------------------- |
+| **Encryption Type**       | SSE-S3 (default), SSE-KMS (auditable), SSE-C (you manage key). |
+| **Versioning**            | Supports rollback, required for CRR & MFA delete.              |
+| **CRR**                   | Needs versioning on both buckets.                              |
+| **Lifecycle Rule**        | Auto move/delete based on age.                                 |
+| **Presigned URLs**        | Temporary, secure access.                                      |
+| **Static Hosting**        | Must make objects public.                                      |
+| **S3 Events**             | Can trigger Lambda/SNS/SQS.                                    |
+| **Access Point**          | Alternate way to manage access.                                |
+| **Transfer Acceleration** | Faster upload from distant users.                              |
+| **Multipart Upload**      | Must for files > 5GB.                                          |
+
+---
+
+---
+
+## ✅ S3 – **Advanced Topics for the Exam**
+
+---
+
+### 🔹 1. **S3 Object Lock & Compliance Mode**
+
+| Feature             | Description                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| **Object Lock**     | Prevents deletion of objects for a fixed retention period (WORM – Write Once Read Many). |
+| **Governance Mode** | Users with special permission can override/delete objects.                               |
+| **Compliance Mode** | Even root users cannot delete/modify until retention expires.                            |
+
+> 🧠 **Exam Scenario**: Financial data retention — use **Compliance Mode**.
+
+---
+
+### 🔹 2. **S3 Select vs Glacier Select**
+
+| Feature            | Description                                                         |
+| ------------------ | ------------------------------------------------------------------- |
+| **S3 Select**      | Run SQL-like queries **on objects (CSV/JSON)** without downloading. |
+| **Glacier Select** | Same for archived data in Glacier.                                  |
+
+> 🧠 **Exam Tip**: Use S3 Select to improve performance when only a portion of large files is needed.
+
+---
+
+### 🔹 3. **Requester Pays Buckets**
+
+* Cost of **data transfer and request charges** billed to requester, not the bucket owner.
+* Common when public data is served but costs shouldn't be paid by data owner.
+
+> 🧠 **Exam Scenario**: “Your org shares large data sets to the public. How do you offload cost?” → Use **Requester Pays**.
+
+---
+
+### 🔹 4. **S3 Access Analyzer**
+
+* Identifies buckets that are publicly accessible or accessible by other accounts.
+* Great for **security auditing** and **exam questions about misconfiguration**.
+
+---
+
+### 🔹 5. **S3 Inventory**
+
+* Provides a **CSV file list** of objects in a bucket daily or weekly.
+* Helps with **auditing and compliance**.
+
+> 🧠 Exam Tip: For bucket content auditing **at scale**, use **S3 Inventory**.
+
+---
+
+### 🔹 6. **S3 Replication (Advanced Types)**
+
+| Type                               | Description                                             |
+| ---------------------------------- | ------------------------------------------------------- |
+| **CRR**                            | Cross-Region Replication.                               |
+| **SRR**                            | Same-Region Replication.                                |
+| **Replicate Delete Markers**       | Optional; helps maintain sync.                          |
+| **Replication Time Control (RTC)** | SLA-backed <15 minutes replication time (paid feature). |
+
+> 🧠 **Exam Scenario**: Low-latency regional backup or multi-account replication → RTC.
+
+---
+
+### 🔹 7. **S3 Event Bridge Integration (Advanced Events)**
+
+* Besides Lambda/SNS/SQS, **S3 can send object events to EventBridge**.
+* Allows **rule-based triggers across AWS services**.
+
+---
+
+### 🔹 8. **S3 Multi-Region Access Points (Newer/Advanced)**
+
+* Automatically routes requests to the closest region (best latency).
+* Useful for **multi-region, global applications**.
+
+> 🧠 Exam Tip: For global user access with lowest latency → use **S3 Multi-Region Access Points**.
+
+---
+
+### 🔹 9. **Access Points & VPC Endpoints**
+
+| Feature                         | Description                                                         |
+| ------------------------------- | ------------------------------------------------------------------- |
+| **Access Points**               | Create custom access policy per app/user.                           |
+| **VPC Endpoint (Gateway Type)** | Private connection from your VPC to S3 **without public internet**. |
+
+> 🧠 Exam Scenario: Secure S3 access from private subnet? → Use **Gateway VPC Endpoint**.
+
+---
+
+### 🔹 10. **S3 Performance Optimization (Deep)**
+
+| Feature                    | Why It’s Important                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Parallelization**        | Prefix is no longer a bottleneck, but for older questions, know that adding prefixes increases performance. |
+| **Upload Parallelization** | Multipart upload lets you upload chunks in parallel.                                                        |
+| **Byte-Range Fetches**     | Parallel download of object parts.                                                                          |
+| **Transfer Acceleration**  | Uses CloudFront edge locations to speed uploads.                                                            |
+
+---
+
+## 🔸 Common Exam Scenarios
+
+| Scenario                                | What to Use                          |
+| --------------------------------------- | ------------------------------------ |
+| Secure access to S3 without public IPs  | VPC Endpoint (Gateway type)          |
+| Prevent object deletions completely     | Object Lock (Compliance Mode)        |
+| Backup S3 across regions                | CRR + Versioning                     |
+| Reduce retrieval cost/time from Glacier | Glacier Select or S3 Lifecycle rules |
+| Allow temporary download access         | Presigned URL                        |
+| Audit S3 contents                       | S3 Inventory                         |
+| Detect public access misconfigs         | S3 Access Analyzer                   |
+
+---
+
+🔹 7. S3 on Outposts & DataSync
+S3 on Outposts: Store data on-premises via Outposts (exam will hint at “local storage in your data center”).
+
+AWS DataSync: Automate transferring large data sets to/from S3.
+
+Exam Tip: When you see “low-latency local access to S3” or “on-premises S3,” think S3 on Outposts.
+
+---
+
+## ✅ S3 CORS (Cross-Origin Resource Sharing)
+
+### 🔹 What is CORS?
+
+CORS is a **browser security feature** that restricts web pages from making **requests to a domain different from the one that served the web page** (called a "cross-origin" request).
+
+If your **JavaScript frontend (e.g., React app)** is hosted at `https://myfrontend.site` and tries to fetch from `https://mybucket.s3.amazonaws.com`, that’s **cross-origin**.
+
+To allow this, you must define **CORS rules on the S3 bucket**.
+
+---
+
+### 🔹 Sample CORS Configuration
+
+```xml
+<CORSConfiguration>
+  <CORSRule>
+    <AllowedOrigin>https://myfrontend.site</AllowedOrigin>
+    <AllowedMethod>GET</AllowedMethod>
+    <AllowedMethod>POST</AllowedMethod>
+    <AllowedHeader>*</AllowedHeader>
+    <ExposeHeader>ETag</ExposeHeader>
+    <MaxAgeSeconds>3000</MaxAgeSeconds>
+  </CORSRule>
+</CORSConfiguration>
+```
+
+### 🔹 Explanation:
+
+| Tag             | Meaning                                                      |
+| --------------- | ------------------------------------------------------------ |
+| `AllowedOrigin` | Which origin is allowed to access (e.g., your frontend URL). |
+| `AllowedMethod` | Which HTTP methods (GET, POST, PUT, etc.) are allowed.       |
+| `AllowedHeader` | Which headers are allowed in the actual request.             |
+| `ExposeHeader`  | Headers exposed to the browser (e.g., `ETag`).               |
+| `MaxAgeSeconds` | How long browser can cache the preflight request result.     |
+
+---
+
+### 🔸 Exam Scenarios:
+
+| Scenario                                                         | What to Remember                            |
+| ---------------------------------------------------------------- | ------------------------------------------- |
+| S3 bucket used as image/video/static content source for a JS app | You need CORS on the bucket.                |
+| App failing with CORS errors in browser                          | Add `AllowedOrigin` matching frontend URL.  |
+| Wildcards allowed?                                               | Yes: `*` allowed for public access (risky). |
+
+> 🧠 **Exam Tip**: CORS is NOT needed for requests from EC2/Lambda/backend. Only **browser-based** (JS frontend) access needs it.
+
+---
+---
+---
+
+
+## 🔍 **Monitoring in AWS – Exam-Focused Breakdown**
+
+AWS provides several monitoring tools. You need to know **when and why to use each**:
+
+---
+
+### 🔸 **1. Amazon CloudWatch** – ⭐ Very Important
+
+| **Feature**                  | **Description**                                                             | **Exam Tips**                                                 |
+| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Metrics**                  | Numeric data points for resources (e.g., CPUUtilization, Invocations, etc.) | Know **default vs custom metrics**.                           |
+| **Logs**                     | Collects logs (e.g., Lambda, EC2, API Gateway, ECS)                         | Use **CloudWatch Agent** or **Lambda log integration**.       |
+| **Alarms**                   | Trigger based on metric thresholds                                          | Useful with **Auto Scaling**, **SNS**, etc.                   |
+| **Dashboards**               | Visualize metrics in a custom dashboard                                     | Create for better insights.                                   |
+| **Events / EventBridge**     | Respond to changes in AWS (e.g., EC2 state changes, scheduled tasks)        | Know difference between **EventBridge vs CloudWatch Alarms**. |
+| **CloudWatch Logs Insights** | SQL-like queries on logs                                                    | Useful for analyzing logs quickly.                            |
+
+---
+
+### 🔸 **2. AWS X-Ray** – 💡 For Tracing
+
+| **Feature**            | **Description**                                                 | **Exam Tips**                               |
+| ---------------------- | --------------------------------------------------------------- | ------------------------------------------- |
+| Traces                 | Visualizes latency of requests through your app (microservices) | Use with **Lambda, API Gateway, ECS, etc.** |
+| Segments & Subsegments | Breakdown of service/component processing time                  | Helps identify **performance bottlenecks**  |
+| Integrated Services    | Lambda, ECS, Beanstalk, API Gateway, EC2, ALB                   | Know how to **instrument code** using SDK   |
+
+---
+
+### 🔸 **3. AWS CloudTrail** – 🎥 For Auditing
+
+| **Feature**       | **Description**                                                        | **Exam Tips**                                                      |
+| ----------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Event History     | Records all **API calls** made in your account (via SDK, CLI, Console) | Use to detect **unauthorized access** or debug failed deployments. |
+| Management Events | By default, includes **create/read/update/delete** on AWS resources    | Free for 90 days (event history).                                  |
+| Data Events       | Logs **S3 object-level** or **Lambda invoke** activity                 | Must be **enabled explicitly**, **incurs cost**.                   |
+| Trail             | A configuration to send logs to S3, CloudWatch Logs, etc.              | Needed for **cross-region**, **org-wide** monitoring.              |
+
+---
+
+### 🔸 **4. VPC Flow Logs** – 🌐 Network Visibility
+
+| **Feature**              | **Description**                                    | **Exam Tips**                                       |
+| ------------------------ | -------------------------------------------------- | --------------------------------------------------- |
+| Log IP traffic           | Captures inbound/outbound traffic at **ENI level** | Useful for **network troubleshooting**              |
+| Sent to CloudWatch or S3 | You must configure it                              | Choose **CloudWatch Logs** for real-time inspection |
+
+---
+
+## 🧠 Summary Table – Monitoring Services
+
+| **Service**              | **Purpose**                   | **Integrated With**                 |
+| ------------------------ | ----------------------------- | ----------------------------------- |
+| CloudWatch               | Metrics, Logs, Alarms         | EC2, Lambda, RDS, API Gateway, etc. |
+| CloudTrail               | Audit API Calls               | All AWS Services                    |
+| AWS X-Ray                | Tracing requests, performance | Lambda, Beanstalk, ECS, API Gateway |
+| VPC Flow Logs            | Network traffic visibility    | ENIs in VPC                         |
+| CloudWatch Agent         | Send OS-level metrics/logs    | EC2, On-premise servers             |
+| CloudWatch Logs Insights | Search/analyze logs           | Lambda, ECS, API Gateway logs, etc. |
+
+---
+
+---
+
+## 🔥 Advanced Monitoring Topics for AWS Developer Associate
+
+---
+
+### 🔹 1. **CloudWatch Embedded Metric Format (EMF)** – 🧠 *Highly Tested*
+
+| Feature                                                  | Description                                                               |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Allows logging **custom metrics inside structured logs** | Instead of sending metrics and logs separately                            |
+| Use case                                                 | Custom business metrics in Lambda or container apps                       |
+| Example                                                  | Log JSON like `{"_aws": {"Timestamp":12345, "CloudWatchMetrics":[...]} }` |
+| Benefit                                                  | No need for separate `PutMetricData` calls — **cheaper, scalable**        |
+| Exam Tip                                                 | Know how EMF can reduce API calls and cost                                |
+
+---
+
+### 🔹 2. **CloudWatch Metric Math** – 🧠 Hidden Gem
+
+| Feature                                    | Description                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| Create **math expressions** across metrics | `sum`, `avg`, `rate`, `IF` logic etc.                                     |
+| Use case                                   | Custom health status (`IF cpu > 70 then alert`)                           |
+| Exam Tip                                   | Know how to **combine metrics (EC2+RDS)** or **derive synthetic metrics** |
+
+---
+
+### 🔹 3. **Custom Metrics** – Important Edge Case
+
+| Feature                        | Description                                             |
+| ------------------------------ | ------------------------------------------------------- |
+| Sent using `PutMetricData` API | Can attach dimensions, units                            |
+| Cost                           | Billed separately — **watch for excess custom metrics** |
+| Retention                      | 15 months (granularity changes over time)               |
+| Dimensions                     | Avoid too many — max 30 per metric                      |
+
+---
+
+### 🔹 4. **Detailed Monitoring vs Basic Monitoring** (EC2)
+
+| Type     | Frequency                                                                                 | Cost |
+| -------- | ----------------------------------------------------------------------------------------- | ---- |
+| Basic    | 5 min                                                                                     | Free |
+| Detailed | 1 min                                                                                     | \$\$ |
+| Exam Tip | Use **Detailed Monitoring** for **faster Auto Scaling** or close watch on app load spikes |      |
+
+---
+
+### 🔹 5. **CloudWatch Anomaly Detection** – ✅ Covered Often
+
+| Feature                                         | Description                                             |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| Uses ML to **predict normal range** of a metric | Detects sudden spikes/drops                             |
+| Use case                                        | CPU usage suddenly goes to 90%                          |
+| Exam Tip                                        | Know how it **auto adjusts alarm thresholds** over time |
+
+---
+
+### 🔹 6. **CloudWatch Contributor Insights** – 💥 Pro Tip
+
+| Feature                                   | Description                                                            |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| Analyze logs to find **top contributors** | e.g., which IP causes most 5xx                                         |
+| Works on                                  | CloudWatch Logs (Lambda/API Gateway), VPC flow logs                    |
+| Exam Tip                                  | Know how to use it to **detect DDoS patterns or performance hotspots** |
+
+---
+
+### 🔹 7. **CloudWatch Synthetics (Canaries)** – 👀 Exam-Ready
+
+| Feature                                           | Description                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| Automated scripts that simulate user interactions | Browser-based or HTTP checks                                           |
+| Use case                                          | Monitor API uptime / front-end responsiveness                          |
+| Language                                          | Node.js or Python                                                      |
+| Exam Tip                                          | Know how to use **Synthetics with X-Ray** for end-to-end observability |
+
+---
+
+### 🔹 8. **X-Ray Sampling Rules** – Deep Cut
+
+| Feature                            | Description                               |
+| ---------------------------------- | ----------------------------------------- |
+| Controls which requests get traced | Default: 1 req/sec + 5% of others         |
+| Use case                           | Prevent cost overrun in high-traffic apps |
+| Custom Rules                       | Path-based or service-based sampling      |
+
+---
+
+### 🔹 9. **Cross-Account Observability** – New & Exam-worthy
+
+| Feature                                                              | Description                                           |
+| -------------------------------------------------------------------- | ----------------------------------------------------- |
+| Centralized observability of CloudWatch metrics/logs across accounts | Use **linked accounts and dashboards**                |
+| Benefit                                                              | Great for orgs with dev/test/prod separation          |
+| Exam Tip                                                             | Know how to **enable sharing via CloudWatch Console** |
+
+---
+
+### 🔹 10. **EventBridge vs CloudWatch Events** – Subtle Trick
+
+| Difference                     | Description                                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| CloudWatch Events = older name | EventBridge = **newer**, supports 3rd party SaaS                                               |
+| Exam Tip                       | Know that **EventBridge pipes**, schema discovery, and bus-to-bus model is only in EventBridge |
+
+---
+
+## 🧠 Summary Table – Pro Level Comparison
+
+| **Feature**        | **Basic Use**           | **Advanced Exam Use**                              |
+| ------------------ | ----------------------- | -------------------------------------------------- |
+| CloudWatch Metrics | EC2/Lambda CPU, Memory  | Custom metrics, metric math, anomaly detection     |
+| CloudWatch Logs    | Lambda logs             | Contributor insights, Logs Insights queries        |
+| CloudWatch Alarms  | CPU > 80%               | Composite alarms, integrated with EMF              |
+| CloudWatch Events  | EC2 start/stop triggers | Use **EventBridge Pipes**, **Cross-account buses** |
+| CloudTrail         | Auditing                | Data events (S3, Lambda), org trails               |
+| X-Ray              | Lambda traces           | Trace groups, sampling rules                       |
+| VPC Flow Logs      | Network flow visibility | Used with Contributor Insights                     |
+| Synthetics         | API/website checks      | Synthetics with screenshots + X-Ray                |
+
+---
+
+## 💡 Final Exam Tips
+
+✅ Know **how different monitoring tools complement each other** — for example:
+
+* Use **CloudTrail + CloudWatch Logs + Alarms** to detect unauthorized access.
+* Use **X-Ray + CW Logs + Metrics** for microservices visibility.
+* Use **EventBridge + Lambda** for automated reactions.
+
+✅ Focus on **cost vs benefit**:
+
+* Custom metrics = paid.
+* Detailed monitoring = paid.
+* Log retention can
+
+
+---
+
+## 🔶 1. **Custom Metrics (CloudWatch)**
+
+### ✅ What Are They?
+
+AWS services push **default metrics**, but when you want to **track app-specific behavior**, you use **custom metrics**.
+
+### 🔹 How to Send Custom Metrics:
+
+* Use AWS CLI:
+
+  ```bash
+  aws cloudwatch put-metric-data --metric-name MyMetric --namespace MyApp --value 100
+  ```
+* From a Lambda function:
+
+  * Use SDK (`PutMetricData`)
+  * Or use **Embedded Metric Format (EMF)** with `console.log`
+
+### 🔹 Key Properties
+
+| Feature     | Value                                     |
+| ----------- | ----------------------------------------- |
+| Namespace   | Logical grouping (e.g. `MyApp`)           |
+| Metric Name | `LoginFailures`, `QueueDepth`             |
+| Dimensions  | Key-value pairs (e.g. `InstanceId=i-123`) |
+| Resolution  | Standard (1 min), High-Res (1 sec)        |
+| Retention   | 15 months (granularity drops over time)   |
+
+---
+
+### ✅ **1. Resolution**
+
+**Resolution** refers to the **frequency** or **granularity** at which metric data points are recorded and available.
+
+| Type                | Interval               | Use Case Example                                   |
+| ------------------- | ---------------------- | -------------------------------------------------- |
+| **Standard**        | Every **1 minute**     | EC2, RDS default metrics, suitable for most alerts |
+| **High-Resolution** | As low as **1 second** | Custom metrics (like real-time API response time)  |
+
+* **Default AWS metrics** (like EC2 CPUUtilization) use **standard resolution** (1-min).
+* **High-resolution metrics** (aka sub-minute) can capture spikes better but **cost more**.
+
+**Example**:
+
+```bash
+aws cloudwatch put-metric-data \
+  --metric-name MyHighResMetric \
+  --namespace MyApp \
+  --value 10 \
+  --storage-resolution 1   # 1 second
+```
+
+---
+
+### ✅ **2. Dimension**
+
+**Dimensions** are **name/value pairs** that are used to **filter and categorize** your metrics. They help **group and query metrics more specifically**.
+
+| Example Metric       | Dimension Key      | Dimension Value     |
+| -------------------- | ------------------ | ------------------- |
+| `CPUUtilization`     | `InstanceId`       | `i-0abcd1234ef5678` |
+| `RequestCount` (ELB) | `LoadBalancerName` | `my-app-lb`         |
+| `CustomMetric`       | `Environment`      | `Prod`              |
+
+* You can **add up to 10 dimensions per metric**.
+* Metrics with **different dimensions are treated as separate metrics**.
+
+> 💡 Think of dimensions like tags or labels to slice and dice your data.
+
+---
+
+### 🔁 Real-World Analogy
+
+| Concept    | Analogy                                                                        |
+| ---------- | ------------------------------------------------------------------------------ |
+| Resolution | How often a thermometer records temperature (once a minute or once per second) |
+| Dimension  | Where the thermometer is placed (living room vs kitchen)                       |
+
+---
+
+🔍 Dimensions are metadata (labels/tags) that help categorize, filter, and search for your metrics — they are NOT the actual metric values.
+
+---
+
+### ⚠️ Exam Tip:
+
+* **High-resolution metrics** support **sub-minute alarms**.
+* **Dimensions** are crucial for creating **specific alarms or dashboards** (e.g., CPUUtilization of a single instance vs all instances).
+* Changing dimension = creating a **new unique metric stream**.
+
+---
+
+### 🔹 Use Cases:
+
+* Track app-level failures
+* Number of items in custom queue
+* Response time from external APIs
+
+### ⚠️ Exam Tips:
+
+* Custom metrics **incur additional cost**.
+* **High-resolution metrics (1 sec)** = more cost.
+* Use **up to 10 dimensions**, but keep them consistent.
+* You can **create alarms** on custom metrics like default ones.
+
+---
+
+## 🔶 2. **Detailed Monitoring (EC2)**
+
+### ✅ What is it?
+
+By default, EC2 sends metrics to CloudWatch every **5 minutes**. Enabling **detailed monitoring** changes it to **1-minute granularity**.
+
+### 🔹 Key Comparison:
+
+| Feature     | Basic Monitoring | Detailed Monitoring         |
+| ----------- | ---------------- | --------------------------- |
+| Frequency   | Every 5 minutes  | Every 1 minute              |
+| Cost        | Free             | Paid                        |
+| Granularity | Lower            | Higher                      |
+| Use case    | General ops      | Auto Scaling, sudden spikes |
+
+### 🔹 Use Cases:
+
+* Set fast-reacting alarms (e.g., CPU spike)
+* **Auto Scaling groups** need **1-min metrics** to scale quickly
+* Granular billing or chargeback tracking
+
+### 🔹 How to Enable:
+
+* Check when launching an EC2 instance: “Enable Detailed Monitoring”
+* Or use CLI:
+
+  ```bash
+  aws ec2 monitor-instances --instance-ids i-12345678
+  ```
+
+### ⚠️ Exam Tips:
+
+* **Auto Scaling policies** work better with detailed monitoring.
+* Can be **enabled/disabled anytime**, no reboot needed.
+* Billed **per instance per month**.
+
+---
+
+## 🔶 3. **CloudWatch Synthetics (Canaries)**
+
+### ✅ What is it?
+
+**Canaries** are small programs that run on a schedule to **simulate user interactions** — like visiting a website or pinging an API — and alert if it fails.
+
+### 🔹 Key Features:
+
+| Feature   | Value                                |
+| --------- | ------------------------------------ |
+| Language  | Node.js or Python                    |
+| Use Case  | API/website uptime checks            |
+| Locations | Global regions                       |
+| Frequency | As low as every 1 min                |
+| Retention | 31 days logs + screenshots           |
+| Visual    | Can take **screenshots** of failures |
+
+### 🔹 Types of Canaries:
+
+* **Heartbeat**: Ping an endpoint for uptime
+* **Scripted**: Use Puppeteer (Node.js) or Selenium (Python) to interact with frontend
+
+### 🔹 Integration:
+
+* CloudWatch Alarms
+* CloudWatch Logs (stores logs)
+* **CloudWatch X-Ray** for tracing
+* EventBridge for automation on failure
+
+### 🔹 Example Use Case:
+
+```javascript
+const synthetics = require('Synthetics');
+const log = require('SyntheticsLogger');
+const https = require('https');
+
+const apiCanaryBlueprint = async function () {
+    let requestOptions = {
+        hostname: "myapi.example.com",
+        method: "GET",
+        path: "/health"
+    };
+    let response = await synthetics.executeHttpStep("Check API", requestOptions);
+};
+```
+
+### ⚠️ Exam Tips:
+
+* Know that **Synthetics help detect outages before customers do**.
+* Know **how they integrate with CloudWatch/X-Ray**.
+* Exam may ask: *“Which service helps simulate user interaction in a production app?”*
+
+---
+
+## 💡 Summary Table – Comparison
+
+| Feature          | Custom Metrics     | Detailed Monitoring      | Synthetics Canaries              |
+| ---------------- | ------------------ | ------------------------ | -------------------------------- |
+| Purpose          | App-level metrics  | Frequent infra metrics   | Simulate user/API interaction    |
+| Setup            | SDK/CLI/EMF        | EC2 Setting              | Scripted in Node/Python          |
+| Cost             | Per metric         | Per instance             | Per run (frequency + region)     |
+| Use with Alarms? | ✅                  | ✅                        | ✅                                |
+| Real Use Case    | Queue size, errors | Trigger ASG on CPU spike | Website/API uptime               |
+| Exam Relevance   | High               | Medium to High           | High (real-world app monitoring) |
+
+---
+
+---
+
+## ✅ 1. **Amazon EventBridge (formerly CloudWatch Events)**
+
+### 🔹 What It Is:
+
+A **serverless event bus** that connects applications using events from AWS services, your applications, or SaaS platforms.
+
+---
+
+### 🔧 How It Works:
+
+1. **Event Source**: AWS services (e.g., EC2, S3), custom apps, or SaaS.
+2. **Event Bus**: Receives events (default, partner, or custom).
+3. **Rules**: Match events using pattern filtering (e.g., eventName = `RunInstances`).
+4. **Target**: Sends matched events to targets like Lambda, Step Functions, SNS, SQS, etc.
+
+---
+
+### 🧠 Must-Know Concepts (Exam Tips):
+
+| Concept               | Description/Example                                                             |
+| --------------------- | ------------------------------------------------------------------------------- |
+| **Default Event Bus** | All AWS services publish events here automatically.                             |
+| **Custom Event Bus**  | You create this for your **own apps** or **partner SaaS** apps.                 |
+| **Event Pattern**     | JSON pattern used to match incoming events (not a full JSON match).             |
+| **Event Archive**     | Retain events and replay them later (for debugging or testing workflows).       |
+| **Schema Registry**   | Auto-discovers JSON schemas and saves them (integrates with IDEs like VS Code). |
+| **Event Replay**      | Replays past events from an archive to test or retry processing logic.          |
+
+---
+
+### 📌 Example Event Pattern (Match EC2 start events):
+
+```json
+{
+  "source": ["aws.ec2"],
+  "detail-type": ["EC2 Instance State-change Notification"],
+  "detail": {
+    "state": ["running"]
+  }
+}
+```
+
+---
+
+### 🎯 Common Targets:
+
+* **Lambda** (common in exam scenarios!)
+* **Step Functions**
+* **SQS/SNS**
+* **ECS task**
+* **Kinesis stream**
+
+---
+
+### 📝 Pro Tips for the Exam:
+
+* Know **how to match events using patterns**.
+* Know when to use **EventBridge vs SNS/SQS**:
+
+  * Use **EventBridge** for **routing based on event content**.
+  * Use **SNS** for **fan-out** pub/sub messaging.
+* **EventBridge can schedule events** (like cron jobs).
+* **CloudTrail can be a source** → EventBridge rule triggers on API calls.
+
+---
+
+## ✅ 2. **AWS CloudTrail**
+
+### 🔹 What It Is:
+
+Records **every API call** (management events) and **data events** (like S3 object-level or Lambda invoke events) across your AWS account.
+
+---
+
+### 🔧 Types of Events:
+
+| Type                  | Description                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| **Management Events** | CRUD operations on resources (e.g., create-bucket, start-instance). |
+| **Data Events**       | Object-level actions (e.g., GetObject in S3, Invoke in Lambda).     |
+| **Insights Events**   | Detects **unusual API activity** (requires CloudTrail Insights).    |
+
+---
+
+### 📂 Where Is It Stored?
+
+* **S3 bucket** (JSON files)
+* Optional: **CloudWatch Logs** (for real-time alerts)
+
+---
+
+### 🧠 Must-Know for Exam:
+
+| Topic                        | Explanation                                                              |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| **Trail**                    | A configuration to record events and store them (S3 or CloudWatch).      |
+| **Single vs Multi-region**   | Single region (default) vs. Multi-region (recommended for global audit). |
+| **CloudTrail Insights**      | Detects anomalies in behavior (e.g., spike in EC2 StopInstances).        |
+| **EventBridge + CloudTrail** | Use EventBridge to react to CloudTrail events in near real-time.         |
+| **Lookup Events**            | Use `aws cloudtrail lookup-events` to find who did what and when.        |
+
+---
+
+### 📌 CLI Example: Who deleted my EC2?
+
+```bash
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=TerminateInstances
+```
+
+---
+
+### 🎓 Sample Exam Scenario:
+
+> You want to take action (send an email, trigger Lambda) **whenever someone disables a CloudTrail trail**.
+
+* ✅ Use **EventBridge** to match the API call `StopLogging` from CloudTrail events.
+* ✅ Set the **target** as Lambda or SNS.
+
+---
+
+## ✅ Summary Table:
+
+| Service         | Purpose                              | Key Use Case                             |
+| --------------- | ------------------------------------ | ---------------------------------------- |
+| **EventBridge** | Event-driven routing & orchestration | Trigger Lambda when EC2 starts           |
+| **CloudTrail**  | API auditing + data event recording  | Track who deleted an S3 bucket           |
+| **Integration** | EventBridge rule based on CloudTrail | Auto-response to security-sensitive APIs |
+
+---
+
+## 📌 Practice Questions (Active Recall)
+
+1. What’s the difference between CloudTrail and CloudWatch Logs?
+2. How would you monitor S3 object-level API calls?
+3. Which service is used for tracing requests in microservice-based apps?
+4. What tool can you use to monitor the network traffic in a private subnet?
+5. Which service can trigger Lambda functions based on scheduled events?
+
+---
+---
+---
+
+
+---
+
+## ✅ VPC – Quick Overview (Foundational)
+
+| Term                       | Description                                               |
+| -------------------------- | --------------------------------------------------------- |
+| **VPC**                    | Your **isolated virtual network** in AWS                  |
+| **CIDR block**             | IP range (e.g., `10.0.0.0/16`)                            |
+| **Subnets**                | Divide VPC into **smaller IP ranges** (Public/Private)    |
+| **Internet Gateway (IGW)** | Allows **public internet access**                         |
+| **NAT Gateway**            | Private subnets can reach internet but **not be reached** |
+| **Route Table**            | Controls **traffic flow** in/out of subnets               |
+| **Security Group**         | **Stateful** virtual firewall for EC2/LB                  |
+| **NACL (Network ACL)**     | **Stateless** firewall at **subnet level**                |
+
+---
+
+## ✅ VPC Exam-Relevant Deep Topics
+
+### 1. **Public vs Private Subnet**
+
+| Type    | Internet Access         | Common Use                  |
+| ------- | ----------------------- | --------------------------- |
+| Public  | Yes (via IGW)           | Web servers, Load Balancers |
+| Private | Outbound only (via NAT) | Databases, App servers      |
+
+🧠 **Exam tip:** A subnet becomes *public* if it has a **route to IGW** and associated **public IP**.
+
+---
+
+### 2. **NAT Gateway vs NAT Instance**
+
+| Feature     | NAT Gateway (Managed) | NAT Instance (EC2) |
+| ----------- | --------------------- | ------------------ |
+| Scalability | Auto scale            | Manual             |
+| HA          | In multi-AZ setup     | You build yourself |
+| Cost        | \$\$\$                | Cheaper (but DIY)  |
+
+🧠 **Exam tip:** NAT Gateway **must be in a public subnet**, and private subnets should route to it.
+
+---
+
+### 3. **VPC Peering vs Transit Gateway**
+
+| Feature            | VPC Peering           | Transit Gateway                 |
+| ------------------ | --------------------- | ------------------------------- |
+| Scope              | **1-to-1** connection | **Hub-and-spoke**               |
+| Transitive routing | ❌ Not supported       | ✅ Supported                     |
+| Use case           | Small environments    | Complex, large-scale networking |
+
+---
+
+### 4. **VPC Endpoints**
+
+| Type          | Description                                     | Example                      |
+| ------------- | ----------------------------------------------- | ---------------------------- |
+| **Gateway**   | Used for **S3 and DynamoDB**                    | Keeps traffic **within AWS** |
+| **Interface** | Used for other services (e.g., SSM, CloudWatch) | Creates **ENI** in subnet    |
+
+🧠 **Exam tip:** **No IGW/NAT** is required when using VPC endpoints — great for private connectivity.
+
+---
+
+### 5. **Elastic IPs & ENIs**
+
+* **Elastic IP:** Static public IPv4 address you can attach to EC2, NAT, etc.
+* **ENI (Elastic Network Interface):** Virtual NIC, can be moved between EC2s.
+
+🧠 ENIs can have multiple **private IPs** and **security groups**, useful in failover setups.
+
+---
+
+### 6. **Flow Logs**
+
+* Capture IP traffic at **VPC, subnet, or ENI level**
+* Useful for **monitoring**, **troubleshooting**, and **auditing**
+
+🧠 Exported to CloudWatch or S3. Can be a **source for security investigations**.
+
+---
+
+### 7. **Custom Route Tables**
+
+Each subnet must be associated with **exactly one route table**.
+
+* **Main Route Table** = Default for subnets unless otherwise specified.
+* **Exam Tip:** If a **private subnet is getting internet**, check if it’s incorrectly pointing to IGW instead of NAT.
+
+---
+
+## 🔐 Security in VPC
+
+| Concept             | Stateful? | Applied To     | Key Point          |
+| ------------------- | --------- | -------------- | ------------------ |
+| **Security Groups** | ✅         | Instance Level | Allow rules only   |
+| **NACLs**           | ❌         | Subnet Level   | Allow & Deny rules |
+
+🧠 Security Group = **Default deny**, then allow.
+🧠 NACL = You must define **both inbound & outbound rules**.
+
+---
+
+## 🧠 Exam Tips (VPC)
+
+| Tip                                                                                        |
+| ------------------------------------------------------------------------------------------ |
+| You can’t assign a **public IP** in a subnet **without a route to IGW**                    |
+| Default VPC comes with **public subnet**, IGW, route table, and security group             |
+| **You must deploy NAT Gateway in public subnet**                                           |
+| **VPC Peering is NOT transitive**, Transit Gateway is                                      |
+| Know which services support **VPC endpoints** (S3, DynamoDB = Gateway; others = Interface) |
+| **Subnet CIDRs must not overlap**, even across peered VPCs                                 |
+
+---
+
+## 🔁 Summary Table
+
+| Feature         | Key Point                                |
+| --------------- | ---------------------------------------- |
+| IGW             | Required for public internet access      |
+| NAT Gateway     | For outbound access from private subnets |
+| Route Table     | Controls subnet routing                  |
+| VPC Peering     | One-to-one, no transitive routing        |
+| Transit Gateway | Hub-and-spoke, scalable                  |
+| VPC Endpoints   | Private access to AWS services           |
+| Flow Logs       | Capture IP-level data                    |
+| NACL            | Stateless firewall                       |
+| Security Group  | Stateful, EC2-level                      |
+
+---
