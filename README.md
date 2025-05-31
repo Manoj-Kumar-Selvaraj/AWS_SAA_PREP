@@ -2687,3 +2687,655 @@ Each subnet must be associated with **exactly one route table**.
 | Security Group  | Stateful, EC2-level                      |
 
 ---
+---
+---
+
+# 🧪 AWS CI/CD Stack: Deep Dive from Zero to Advanced
+
+---
+
+## 🧱 1. CodeCommit (Git Repo on AWS)
+
+### 🔹 What is CodeCommit?
+
+* It’s AWS’s **fully-managed Git-based source control** service.
+* Think of it like GitHub or Bitbucket, but **private, secure, and integrated with IAM**.
+
+### 🔹 How to Set It Up (Basics):
+
+1. **Create a repository** in CodeCommit.
+2. Clone it locally:
+
+   ```bash
+   git clone https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-repo
+   ```
+3. **Authenticate via**:
+
+   * HTTPS using IAM credentials + AWS credential helper
+   * SSH using public/private key pair uploaded to IAM
+
+---
+
+### 🔐 IAM & Authentication for CodeCommit:
+
+You must:
+
+* Attach **CodeCommit permissions** (`AWSCodeCommitFullAccess`, ideally a custom least-privilege version).
+* Set up credentials in `.git/config` or use AWS credential helper:
+
+  ```bash
+  git config --global credential.helper '!aws codecommit credential-helper $@'
+  ```
+
+---
+
+## 🧪 2. CodeBuild (Build and Package Your App)
+
+---
+
+### 🔹 What is CodeBuild?
+
+* A **fully managed build service** that compiles your source code, runs tests, and produces deployable artifacts.
+* It's **language-agnostic**, supporting Docker, Node.js, Java, Python, etc.
+
+---
+
+### 🧾 `buildspec.yml` — THE Heart of CodeBuild
+
+This YAML file **tells CodeBuild what to do**.
+
+### ✅ Minimal Example:
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+  build:
+    commands:
+      - npm install
+      - npm run build
+
+artifacts:
+  files:
+    - '**/*'
+```
+
+---
+
+### 🔍 Full Anatomy of `buildspec.yml`
+
+```yaml
+version: 0.2
+
+env:                           # Optional: Environment variables
+  variables:
+    ENV: prod
+
+phases:
+  install:
+    runtime-versions:          # Pre-built environments
+      python: 3.9
+      java: corretto11
+    commands:
+      - echo Installing dependencies...
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo Logging into ECR...
+      - aws ecr get-login-password | docker login
+  build:
+    commands:
+      - echo Building Docker image...
+      - docker build -t my-image .
+  post_build:
+    commands:
+      - echo Pushing image to ECR...
+      - docker push my-image
+
+artifacts:                     # Files to export to S3 (for CodeDeploy etc.)
+  files:
+    - '**/*'
+  name: my-output-artifacts
+```
+
+---
+
+### 🔧 `install:` Phase
+
+> 🧩 Purpose: Set up the environment before any code is built.
+> 💡 Example: Installing dependencies like Python packages, Node modules, updating Linux packages, etc.
+
+```yaml
+install:
+  runtime-versions:
+    python: 3.9
+    nodejs: 14
+  commands:
+    - echo Installing system packages
+    - apt-get update -y
+    - apt-get install -y jq
+```
+
+**Common Uses:**
+
+* Specify runtime versions (Python, Java, Node.js, Docker, etc.)
+* Install system packages (via `apt`, `yum`)
+* Set up environment variables
+* Validate tools (e.g., `aws --version`)
+
+---
+
+### 🔄 `pre_build:` Phase
+
+> 🧩 Purpose: Do things **before building**, like authentication or preprocessing.
+> 💡 Example: Logging in to Docker registries, setting up AWS credentials, testing linting, etc.
+
+```yaml
+pre_build:
+  commands:
+    - echo Logging in to Amazon ECR...
+    - aws ecr get-login-password | docker login --username AWS --password-stdin <account>.dkr.ecr.<region>.amazonaws.com
+    - echo Pre-build done
+```
+
+**Common Uses:**
+
+* Docker/ECR login
+* Linting
+* Secret decryption
+* Dependency pre-caching
+
+---
+
+### 🏗️ `build:` Phase
+
+> 🧩 Purpose: This is where the **main build happens**. Compile, transpile, or run test suites.
+> 💡 Example: `npm run build`, `mvn package`, `pytest`, or `docker build`.
+
+```yaml
+build:
+  commands:
+    - echo Building the application...
+    - npm install
+    - npm run build
+```
+
+**Common Uses:**
+
+* Compile code
+* Run test cases
+* Build Docker images
+* Minify or bundle assets
+
+---
+
+### ✅ `post_build:` Phase
+
+> 🧩 Purpose: Final steps after the build: pushing artifacts, cleanup, or generating metadata.
+> 💡 Example: Docker push, tagging artifacts, notifying Slack, writing to S3.
+
+```yaml
+post_build:
+  commands:
+    - echo Pushing Docker image...
+    - docker push <ecr-repo-url>:latest
+    - echo Build completed successfully!
+```
+
+**Common Uses:**
+
+* Push Docker image to ECR
+* Save logs or reports
+* Clean temp files
+* Notify other systems (SNS, Slack, email)
+
+---
+
+## 💡 Pro Tips for the Exam
+
+| Phase        | Typical Activities                   | Exam-Tricky Detail                                     |
+| ------------ | ------------------------------------ | ------------------------------------------------------ |
+| `install`    | Setup runtimes, install OS packages  | Can declare multiple runtimes using `runtime-versions` |
+| `pre_build`  | Logins, download deps, validation    | Used for ECR auth, `aws configure`, secret fetch       |
+| `build`      | Compilation, testing                 | Most resource-intensive, show logs in console          |
+| `post_build` | Push artifacts, cleanup, upload logs | Often includes S3 uploads or ECR push                  |
+
+---
+
+### ⚠️ Exam Tips:
+
+* Know all **phases**: `install`, `pre_build`, `build`, `post_build`
+* Understand **environment variables** (plaintext or secrets from Parameter Store)
+* Output artifacts = build output stored in S3
+
+---
+
+Here’s a detailed real-world example of a `buildspec.yml` file used to build and push a **Dockerized Node.js** application to **Amazon ECR**, with CI/CD best practices built in.
+
+---
+
+## 🧪 Example: `buildspec.yml` for Dockerized Node.js App
+
+### 🗂️ Folder Structure:
+
+```
+my-app/
+├── Dockerfile
+├── app.js
+├── package.json
+├── buildspec.yml
+```
+
+---
+
+### 📄 `buildspec.yml`
+
+```yaml
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: my-nodejs-app
+    IMAGE_TAG: latest
+    AWS_REGION: us-east-1
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - echo Installing source NPM dependencies...
+      - npm install
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com)
+      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Repository URI is $REPOSITORY_URI
+      - echo Setting image tag as $IMAGE_TAG
+
+  build:
+    commands:
+      - echo Building Docker image...
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo Pushing image to Amazon ECR...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions to imagedefinitions.json...
+      - |
+        printf '[{"name":"%s","imageUri":"%s"}]' $IMAGE_REPO_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files: 
+    - imagedefinitions.json
+```
+
+---
+
+### ✅ Key Highlights:
+
+| Section       | Explanation                                                                 |
+| ------------- | --------------------------------------------------------------------------- |
+| `env:`        | Defines environment variables used in all phases.                           |
+| `install:`    | Installs project dependencies (`npm install`).                              |
+| `pre_build:`  | Logs into ECR and sets Docker repo variables dynamically.                   |
+| `build:`      | Builds and tags the Docker image.                                           |
+| `post_build:` | Pushes the image to ECR and creates `imagedefinitions.json` for CodeDeploy. |
+| `artifacts:`  | `imagedefinitions.json` is required if you're using ECS in CodePipeline.    |
+
+---
+
+### 🔑 Exam Tips
+
+| Concept                 | Exam Clue/Twist                                                               |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `imagedefinitions.json` | Required when deploying to ECS via CodePipeline using CodeDeploy.             |
+| Auth to ECR             | Must use `aws ecr get-login-password` (especially with `Fargate` or EKS/ECS). |
+| Phases separation       | Understand what runs where. Build failures often stem from the wrong phase.   |
+| `env` variables         | Can be overwritten in CodeBuild project settings or passed from CodePipeline. |
+
+---
+
+## 🚀 3. CodeDeploy (Deployment Tool)
+
+---
+
+### 🔹 What is CodeDeploy?
+
+* Automates **app deployments** to:
+
+  * **EC2**, **Lambda**, or **On-prem servers**
+  * **Auto Scaling Groups**
+* Supports **in-place** and **Blue/Green** deployments
+
+---
+
+### 🧾 `appspec.yml` — THE Deployment Blueprint
+
+This file tells CodeDeploy **what to copy**, and **what scripts to run** before/after deployment.
+
+---
+
+### ✅ Sample for EC2:
+
+```yaml
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /var/www/html
+
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 180
+  AfterInstall:
+    - location: scripts/after_install.sh
+  ApplicationStart:
+    - location: scripts/start_server.sh
+  ValidateService:
+    - location: scripts/validate_service.sh
+```
+
+> Place this in the **root of your deployment artifact (usually a zip)**.
+
+---
+
+### ✅ Sample for Lambda:
+
+```yaml
+version: 0.0
+
+Resources:
+  - myFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: my-lambda
+        Alias: live
+
+Hooks:
+  - BeforeAllowTraffic: test-hook-func
+  - AfterAllowTraffic: cleanup-func
+```
+
+---
+
+### ⚠️ Exam Tips:
+
+* **Understand the difference** between:
+
+  * `BeforeInstall` vs `AfterInstall` vs `ApplicationStart`
+  * EC2 (Linux) and Lambda (with hooks)
+* **Blue/Green deployments are supported for Lambda** out-of-the-box.
+
+---
+
+## 🛠️ 4. CodePipeline (The Glue for CI/CD)
+
+---
+
+### 🔹 What is CodePipeline?
+
+* A visual pipeline builder to connect all CI/CD stages:
+
+  * **Source → Build → Test → Deploy**
+* Supports:
+
+  * AWS-native tools (CodeCommit, CodeBuild, CodeDeploy)
+  * 3rd-party (GitHub, Jenkins, etc.)
+
+---
+
+### ✅ How to Trigger Pipeline on Code Push?
+
+1. When using **CodeCommit**, CodePipeline automatically triggers on a push.
+2. When using **GitHub**, you must:
+
+   * Set up a webhook.
+   * Or use **EventBridge rule** for trigger (GitHub Enterprise only).
+
+---
+
+### 🔁 How It All Connects
+
+```
+[CodeCommit] ──Push──▶ [CodePipeline]
+                        │
+                        ▼
+                  [CodeBuild Stage]
+                        │
+                        ▼
+                  [CodeDeploy Stage]
+                        │
+                        ▼
+                    [EC2 / Lambda]
+```
+
+---
+
+### 📄 JSON-style Pipeline Structure
+
+Example:
+
+```json
+{
+  "pipeline": {
+    "name": "MyPipeline",
+    "roleArn": "arn:aws:iam::123:role/AWSCodePipelineServiceRole",
+    "stages": [
+      {
+        "name": "Source",
+        "actions": [
+          {
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "AWS",
+              "provider": "CodeCommit",
+              "version": "1"
+            },
+            "outputArtifacts": ["SourceArtifact"],
+            "configuration": {
+              "RepositoryName": "my-repo",
+              "BranchName": "main"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 🔐 IAM Role Structure (Very Important for Exam)
+
+| Service      | Role Name                 | Permissions Needed                         |
+| ------------ | ------------------------- | ------------------------------------------ |
+| CodeBuild    | `CodeBuildServiceRole`    | S3, logs, ECR, Parameter Store (optional)  |
+| CodeDeploy   | `CodeDeployServiceRole`   | EC2 or Lambda access                       |
+| CodePipeline | `CodePipelineServiceRole` | Assume above roles, read/write to S3, logs |
+
+Each service assumes the right IAM role to **only do its job**, following **least privilege**.
+
+---
+
+**real-world end-to-end CI/CD setup using:**
+
+✅ **CodeCommit** (Source repo)
+✅ **CodeBuild** (Build and create artifacts)
+✅ **CodeDeploy** (Deploy to EC2)
+✅ **CodePipeline** (Orchestrates everything)
+
+---
+
+## 🎯 Overview
+
+* App files are stored in **CodeCommit**.
+* When you push code, **CodePipeline** is triggered.
+* **CodeBuild** uses `buildspec.yml` to build and package.
+* **CodeDeploy** deploys the app to EC2 using `appspec.yml`.
+
+---
+
+## 🧾 1. `buildspec.yml` – CodeBuild Config
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing...
+  build:
+    commands:
+      - echo Build started...
+      - mkdir -p output
+      - cp index.html output/
+  post_build:
+    commands:
+      - echo Build completed
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: output
+```
+
+---
+
+## 📦 2. `appspec.yml` – CodeDeploy Config
+
+```yaml
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 300
+      runas: root
+```
+
+### 🔧 Sample Hook Scripts
+
+**`scripts/before_install.sh`**:
+
+```bash
+#!/bin/bash
+echo "Stopping old server..."
+sudo systemctl stop httpd
+```
+
+**`scripts/after_install.sh`**:
+
+```bash
+#!/bin/bash
+echo "Starting web server..."
+sudo systemctl start httpd
+```
+
+---
+
+## 🐙 3. CodeCommit Setup
+
+Use AWS CLI to create a repo:
+
+```bash
+aws codecommit create-repository --repository-name MyWebApp
+```
+
+Push your code (first-time setup):
+
+```bash
+git init
+git remote add origin https://git-codecommit.<region>.amazonaws.com/v1/repos/MyWebApp
+git add .
+git commit -m "Initial commit"
+git push origin main
+```
+
+---
+
+## 🏗️ 4. CodeBuild Project (AWS Console or YAML)
+
+Basic config:
+
+* Source: CodeCommit
+* Buildspec file: `buildspec.yml`
+* Artifacts: `output/`
+* Environment: Standard Ubuntu, managed image
+
+IAM Role **must** include:
+
+* `codecommit:GitPull`
+* `s3:*` for your artifact bucket
+
+---
+
+## 🚀 5. CodeDeploy Setup
+
+* EC2 instances should have **CodeDeploy Agent installed**
+* IAM Role on EC2: `AmazonEC2RoleforAWSCodeDeploy`
+* Deployment group must be attached to a tag or Auto Scaling group
+
+---
+
+## 🔄 6. CodePipeline – Full Integration
+
+You can create this from the AWS Console (preferred for beginners), or use CloudFormation/IaC.
+
+Pipeline flow:
+
+* **Source Stage**: CodeCommit → triggers on push
+* **Build Stage**: CodeBuild → builds using `buildspec.yml`
+* **Deploy Stage**: CodeDeploy → deploys using `appspec.yml`
+
+---
+
+## 🔁 Trigger Flow
+
+1. Push code to CodeCommit.
+2. CodePipeline detects change and triggers.
+3. CodeBuild runs, packages files, outputs to S3.
+4. CodeDeploy pulls artifact from S3 and deploys to EC2.
+
+---
+
+## ✅ Final Notes (Exam & Real Use Tips)
+
+| Service      | Exam Tip                                                              |
+| ------------ | --------------------------------------------------------------------- |
+| CodeCommit   | Git-based. IAM auth (HTTPS or SSH). EventBridge triggers pipelines.   |
+| CodeBuild    | `buildspec.yml`, phases, store in S3. Add runtime, env variables.     |
+| CodeDeploy   | Understand `appspec.yml`, lifecycle hooks, in-place vs blue/green.    |
+| CodePipeline | Orchestrates stages. Must define roles for each stage. Auto triggers. |
+
+---
+
+## 💡 Exam-Specific Summary
+
+| Concept                 | Why It Matters on Exam                               |
+| ----------------------- | ---------------------------------------------------- |
+| `buildspec.yml`         | Know structure, phases, environment variables        |
+| `appspec.yml`           | Know hooks and deployment types (EC2 vs Lambda)      |
+| CodePipeline triggering | Know auto-trigger methods (especially for Git repos) |
+| Deployment types        | In-place vs Blue/Green differences                   |
+| IAM separation          | Each service has its own role, with scoped access    |
+| Integration order       | CodeCommit → CodeBuild → CodeDeploy → CodePipeline   |
+
+---
+
