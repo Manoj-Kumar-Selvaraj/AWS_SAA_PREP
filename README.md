@@ -3306,6 +3306,129 @@ Pipeline flow:
 
 ---
 
+---
+
+## 🧩 7. CodePipeline Configuration (Console / YAML / CloudFormation)
+
+Here’s how you can **configure CodePipeline** in real projects:
+
+---
+
+### ✅ **1. CodePipeline – YAML Example (CloudFormation Style)**
+
+```yaml
+Resources:
+  MyPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: arn:aws:iam::123456789012:role/CodePipelineServiceRole
+      ArtifactStore:
+        Type: S3
+        Location: my-codepipeline-artifact-bucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                RepositoryName: MyWebApp
+                BranchName: main
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ProjectName: MyWebAppBuild
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: 1
+              InputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ApplicationName: MyWebApp
+                DeploymentGroupName: MyWebAppDG
+```
+
+---
+
+### ⚙️ 2. How to Create This in Console
+
+**Step-by-step via Console:**
+
+1. **Step 1 – Source Stage**
+
+   * Source provider: CodeCommit
+   * Repo: `MyWebApp`, Branch: `main`
+
+2. **Step 2 – Build Stage**
+
+   * Provider: CodeBuild
+   * Project: `MyWebAppBuild`
+   * Artifact output: S3 bucket
+
+3. **Step 3 – Deploy Stage**
+
+   * Provider: CodeDeploy
+   * Application name: `MyWebApp`
+   * Deployment group: `MyWebAppDG`
+
+4. **IAM Role**
+
+   * Use an IAM role with the following:
+
+     * `codepipeline:*`
+     * `codebuild:*`
+     * `codedeploy:*`
+     * `s3:*`
+     * `codecommit:*`
+
+---
+
+## 🎯 Triggering the Pipeline Automatically
+
+You **don't need to configure anything manually** to trigger CodePipeline on a code push if:
+
+* CodePipeline uses **CodeCommit** as the source.
+* It **automatically sets up EventBridge events** to trigger pipeline.
+
+✅ **Exam Tip**:
+You **do not need to manually configure** EventBridge or CloudWatch events if you're using CodeCommit as the source. CodePipeline sets this up for you.
+
+---
+
+### 🛡️ Bonus Exam Notes
+
+| Feature         | Notes                                                                 |
+| --------------- | --------------------------------------------------------------------- |
+| `buildspec.yml` | Mandatory for CodeBuild unless configured inline. Know all phases.    |
+| `appspec.yml`   | Mandatory for CodeDeploy. Know hook order and failure behaviors.      |
+| Artifacts       | Stored in S3. Use CodePipeline’s S3 artifact bucket.                  |
+| IAM             | One role per service: CodeBuild, CodeDeploy, Pipeline need own roles. |
+| Triggers        | CodePipeline triggers automatically from CodeCommit (no EventBridge). |
+| Blue/Green      | Use with **CodeDeploy + ALB**, not just EC2.                          |
+
+---
+
+
 ## 🔁 Trigger Flow
 
 1. Push code to CodeCommit.
