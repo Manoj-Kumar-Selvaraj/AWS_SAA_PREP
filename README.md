@@ -3461,4 +3461,797 @@ You **do not need to manually configure** EventBridge or CloudWatch events if yo
 | Integration order       | CodeCommit → CodeBuild → CodeDeploy → CodePipeline   |
 
 ---
+---
+---
+
+
+**AWS CloudFormation** 
+
+
+
+---
+
+### ✅ **CloudFormation – What to Focus On**
+
+You don’t need to memorize YAML syntax, but you should understand:
+
+#### 1. **Basic Purpose**
+
+* Automates resource provisioning using templates (Infrastructure as Code – IaC).
+
+#### 2. **Core Concepts**
+
+| Concept          | Description                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| **Template**     | Written in JSON or YAML. Describes AWS resources.              |
+| **Stack**        | A collection of resources defined in the template.             |
+| **Change Set**   | Preview of what changes will be made during an update.         |
+| **Stack Policy** | Controls update permissions for specific resources in a stack. |
+
+#### 3. **Important Template Sections**
+
+* `Resources`: Mandatory – defines AWS resources.
+* `Parameters`: Input values.
+* `Outputs`: Useful for exporting values.
+* `Conditions`: Conditional resource creation.
+* `Mappings`: Static key-value pairs.
+
+#### 4. **Drift Detection**
+
+* Identifies if manual changes were made to resources outside CloudFormation.
+
+---
+
+### 🎯 Exam Tips:
+
+* Understand how CloudFormation **automates** infrastructure.
+* Know the benefits: **repeatability**, **version control**, **consistency**.
+* Expect scenario questions like:
+
+  * "A developer wants to deploy resources consistently across dev, staging, and prod..."
+  * "How can a developer roll back a failed stack deployment?"
+
+---
+---
+---
+
+
+# CloudFormation Example: Lambda + API Gateway REST API
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda function with API Gateway REST API
+
+Parameters:
+  LambdaFunctionName:
+    Type: String
+    Default: HelloWorldFunction
+    Description: Name of the Lambda function
+
+Resources:
+
+  # IAM Role for Lambda execution
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function resource
+  HelloWorldLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'body': 'Hello from Lambda!'
+              }
+
+  # API Gateway Rest API
+  ApiGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: HelloWorldAPI
+
+  # API Gateway Resource (root resource '/')
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: hello
+
+  # API Gateway Method (GET)
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - Region: !Ref "AWS::Region"
+            LambdaArn: !GetAtt HelloWorldLambda.Arn
+
+  # Lambda permission to allow API Gateway to invoke it
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref HelloWorldLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        - arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/hello
+        - Region: !Ref "AWS::Region"
+          AccountId: !Ref "AWS::AccountId"
+          ApiId: !Ref ApiGatewayRestApi
+
+Outputs:
+  ApiUrl:
+    Description: "Invoke URL of the API Gateway"
+    Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/hello"
+```
+
+---
+
+### Explanation:
+
+| Resource                   | Purpose                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| **LambdaExecutionRole**    | IAM role allowing Lambda to write logs in CloudWatch.        |
+| **HelloWorldLambda**       | Simple Python Lambda function returning "Hello from Lambda!" |
+| **ApiGatewayRestApi**      | API Gateway REST API resource.                               |
+| **ApiGatewayResource**     | API path `/hello` resource under root.                       |
+| **ApiGatewayMethod**       | HTTP GET method linked to Lambda via AWS\_PROXY integration. |
+| **LambdaInvokePermission** | Permission allowing API Gateway to invoke Lambda.            |
+| **Outputs ApiUrl**         | The endpoint URL for easy testing after stack creation.      |
+
+---
+
+### How this works
+
+* CloudFormation creates a Lambda with inline Python code.
+* API Gateway exposes a REST API at `/hello`.
+* When you invoke the API Gateway URL via GET, it triggers the Lambda.
+* Lambda returns a simple HTTP 200 with "Hello from Lambda!".
+
+---
+
+### Deployment
+
+* Save as `lambda-api.yaml`
+* Deploy with AWS CLI:
+
+  ```bash
+  aws cloudformation deploy --template-file lambda-api.yaml --stack-name LambdaApiStack --capabilities CAPABILITY_NAMED_IAM
+  ```
+* The `--capabilities CAPABILITY_NAMED_IAM` flag is required because the template creates an IAM Role.
+
+---
+
+let’s cover **all important CloudFormation intrinsic functions** for the **AWS Developer Associate exam**, in the **same concise, example-driven style** as we did for `!Ref`, `!GetAtt`, and `!Sub`.
+
+---
+
+# ✅ AWS CloudFormation Intrinsic Functions — Quick Reference with Examples
+
+---
+
+## 1. `!Ref` — **Reference resource or parameter**
+
+* ✅ **Returns:** ID or value of a parameter/resource.
+* 📘 **Use case:** Referencing resources/params like `BucketName`, `InstanceType`.
+
+```yaml
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  BucketName:
+    Value: !Ref MyBucket  # Returns bucket name (ID)
+```
+
+---
+
+## 2. `!GetAtt` — **Get a resource attribute**
+
+* ✅ **Returns:** Specific attribute (e.g., ARN, URL).
+* 📘 **Use case:** Getting things like `Lambda.Arn`, `Bucket.DomainName`.
+
+```yaml
+Outputs:
+  LambdaArn:
+    Value: !GetAtt MyLambdaFunction.Arn
+```
+
+---
+
+## 3. `!Sub` — **String substitution**
+
+* ✅ **Returns:** String with embedded variables replaced.
+* 📘 **Use case:** Create dynamic ARNs, S3 paths.
+
+```yaml
+Value: !Sub "arn:aws:s3:::${MyBucket}"
+```
+
+---
+
+## 4. `!Join` — **Concatenate strings**
+
+* ✅ **Returns:** Single string from a list of values.
+* 📘 **Use case:** Build paths, URLs, commands.
+
+```yaml
+Value: !Join ["", ["https://", !Ref MyBucket, ".s3.amazonaws.com/"]]
+```
+🔍 What it does:
+
+!Join ["", [...]] concatenates strings with no delimiter.
+
+!Ref MyBucket returns the logical name or physical name of the MyBucket resource — typically the name of an S3 bucket.
+
+🧠 Assuming that MyBucket resolves to my-sample-bucket, the result would be:
+
+Value: https://my-sample-bucket.s3.amazonaws.com/
+
+
+---
+
+## 5. `!Select` — **Pick an item from a list**
+
+* ✅ **Returns:** Value at a specific index.
+* 📘 **Use case:** Use first AZ or subnet from a list.
+
+```yaml
+Value: !Select [0, !GetAZs ""]
+```
+
+---
+
+## 6. `!Split` — **Split a string into a list**
+
+* ✅ **Returns:** List from a string based on delimiter.
+* 📘 **Use case:** Break up a comma-separated list.
+
+```yaml
+Value: !Select [1, !Split [",", "a,b,c"]]  # returns "b"
+```
+The CloudFormation line:
+
+```yaml
+Value: !Select [0, !GetAZs ""]
+```
+
+🔍 **Explanation**:
+
+* `!GetAZs ""` → Returns a **list of all Availability Zones (AZs)** in the **current region**.
+* `!Select [0, ...]` → Selects the **first AZ** (index `0`) from that list.
+
+📌 **Output Example**:
+
+If you’re in the `us-east-1` region, and the AZs available are:
+
+```yaml
+["us-east-1a", "us-east-1b", "us-east-1c", ...]
+```
+
+Then the output will be:
+
+```yaml
+Value: us-east-1a
+```
+
+✅ **Use Case**: Helpful when you want to deploy resources to a specific AZ (like the first one) without hardcoding its name.
+
+---
+
+## 7. `!If` — **Conditionally choose a value**
+
+* ✅ **Returns:** Value based on a condition.
+* 📘 **Use case:** Use different values based on environment (Prod/Dev).
+
+```yaml
+Conditions:
+  IsProd: !Equals [!Ref EnvType, "prod"]
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [IsProd, "prod-bucket", "dev-bucket"]
+```
+CloudFormation snippet uses the `!If` intrinsic function along with a condition to **create different bucket names based on the environment type**. Here's a breakdown:
+
+---
+
+### ✅ **What this does:**
+
+#### **1. Condition block:**
+
+```yaml
+Conditions:
+  IsProd: !Equals [!Ref EnvType, "prod"]
+```
+
+This checks if the value of the parameter `EnvType` is `"prod"`. If true, `IsProd` will be `true`, otherwise `false`.
+
+#### **2. S3 Bucket resource:**
+
+```yaml
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [IsProd, "prod-bucket", "dev-bucket"]
+```
+
+This creates a bucket named:
+
+* `"prod-bucket"` if `EnvType` is `"prod"`
+* `"dev-bucket"` otherwise
+
+---
+
+### 💡 **To make this work end-to-end**, add this at the top of your template:
+
+#### **Parameters block:**
+
+```yaml
+Parameters:
+  EnvType:
+    Type: String
+    AllowedValues:
+      - prod
+      - dev
+```
+
+This allows you to pass `"prod"` or `"dev"` when you launch the stack.
+
+---
+
+### 🧪 **Example Outputs:**
+
+| EnvType Value | Bucket Name Created |
+| ------------- | ------------------- |
+| `"prod"`      | `prod-bucket`       |
+| `"dev"`       | `dev-bucket`        |
+
+---
+
+---
+
+## 8. `!Equals` — **Compare two values**
+
+* ✅ **Returns:** true/false
+* 📘 **Use case:** Use in conditions
+
+```yaml
+Conditions:
+  IsProd: !Equals [!Ref EnvType, "prod"]
+```
+
+---
+
+## 9. `!And`, `!Or`, `!Not` — **Logical conditions**
+
+* ✅ **Returns:** Logical combination of booleans
+* 📘 **Use case:** Combine conditions
+
+```yaml
+Conditions:
+  UseProd:
+    !And [
+      !Equals [!Ref EnvType, "prod"],
+      !Equals [!Ref Region, "us-east-1"]
+    ]
+```
+
+---
+
+## 10. `!ImportValue` — **Import from another stack**
+
+* ✅ **Returns:** Value exported by another stack
+* 📘 **Use case:** Reference VPC ID, Subnet ID from shared stacks
+
+```yaml
+Value: !ImportValue SharedVPCID
+```
+
+---
+
+## 11. `!FindInMap` — **Look up a value from a mapping**
+
+* ✅ **Returns:** Value from a Mapping table
+* 📘 **Use case:** Return AMI ID per region
+
+```yaml
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-123456
+    us-west-2:
+      AMI: ami-789012
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+```
+
+---
+
+## 12. `!Base64` — **Base64 encode a string (UserData)**
+
+* ✅ **Returns:** Base64-encoded string
+* 📘 **Use case:** Pass commands to EC2 user data
+
+```yaml
+UserData: !Base64 |
+  #!/bin/bash
+  yum install -y httpd
+  systemctl start httpd
+```
+
+---
+
+## 13. `!GetAZs` — **Get list of availability zones**
+
+* ✅ **Returns:** List of AZs for a region
+* 📘 **Use case:** Choose AZs dynamically
+
+```yaml
+Value: !Select [0, !GetAZs "us-east-1"]  # Returns first AZ
+```
+
+---
+
+## 14. `!Condition` — **Attach condition to a resource**
+
+* ✅ **Use with:** `Conditions` section
+* 📘 **Use case:** Create resource only if condition is true
+
+```yaml
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsProd
+```
+
+---
+
+### 🧠 Pro Tip for Exam:
+
+| Function                                  | Category    | Shortcut Purpose                      |
+| ----------------------------------------- | ----------- | ------------------------------------- |
+| `!Ref`                                    | Reference   | Resource ID / parameter value         |
+| `!GetAtt`                                 | Reference   | Resource attribute like ARN           |
+| `!Sub`, `!Join`                           | String      | Combine/substitute strings            |
+| `!If`, `!Equals`, `!And` etc.             | Conditions  | Decision-making logic                 |
+| `!ImportValue`                            | Cross-stack | Use value from another CloudFormation |
+| `!FindInMap`                              | Mapping     | Lookup table                          |
+| `!Base64`, `!GetAZs`, `!Split`, `!Select` | Utility     | Common dynamic helpers                |
+
+---
+
+Let's cover the **`--capabilities` flag**, which is **required when creating stacks that include IAM resources** (like roles or policies).
+
+---
+
+## ✅ Why is `--capabilities` required?
+
+CloudFormation **needs your explicit permission** to create or modify IAM resources (because they can impact security). Without this flag, the stack creation **will fail** if it tries to create IAM roles, users, or policies.
+
+---
+
+## 🧠 You must use:
+
+```bash
+--capabilities CAPABILITY_NAMED_IAM
+```
+
+or in older templates:
+
+```bash
+--capabilities CAPABILITY_IAM
+```
+
+---
+
+## 🔍 What's the difference?
+
+| Flag                     | Use when…                                                                |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `CAPABILITY_IAM`         | You're creating **IAM resources** but not naming them explicitly.        |
+| `CAPABILITY_NAMED_IAM`   | You're creating IAM resources **with custom names** (using `RoleName`).  |
+| `CAPABILITY_AUTO_EXPAND` | You're using macros (advanced use cases, not needed for Developer exam). |
+
+---
+
+## 🧪 Example with AWS CLI:
+
+```bash
+aws cloudformation create-stack \
+  --stack-name my-stack \
+  --template-body file://template.yaml \
+  --capabilities CAPABILITY_NAMED_IAM
+```
+
+---
+
+## 📝 In summary:
+
+If your CloudFormation template includes any **IAM roles**, **policies**, or **users**, **you must include the `--capabilities` flag**, or the operation will fail.
+
+---
+
+
+### Exam Tips:
+
+* Know **Lambda permissions** to allow API Gateway invocation.
+* Understand **API Gateway methods and resources**.
+* Learn **intrinsic functions** like `!Ref`, `!GetAtt`, `!Sub`.
+* Recognize **AWS\_PROXY integration** (Lambda Proxy Integration) vs. other integration types.
+* Be comfortable with **inline Lambda code** in CloudFormation for simple examples.
+* Know **capabilities flag** is mandatory when creating IAM roles.
+
+---
+---
+---
+
+
+# API Gateway - Advanced Concepts
+
+---
+
+## 1. Types of API Gateway APIs
+
+### a. REST API
+
+* Full-featured.
+* Supports:
+
+  * Custom domain names.
+  * API keys and usage plans.
+  * Mapping templates (VTL).
+  * Caching.
+* Higher latency and cost.
+* **Use case**: When you need full control over the request and response or caching.
+
+### b. HTTP API
+
+* Modern, lightweight, faster, and cheaper.
+* Supports:
+
+  * JWT/OIDC Authorization.
+  * Simple integrations (Lambda, HTTP backends).
+* Limited support (no caching, limited transformation).
+* **Use case**: Lightweight APIs with lower cost and faster performance.
+
+### c. WebSocket API
+
+* Supports real-time, two-way communication.
+* **Use case**: Chat apps, notifications, real-time dashboards.
+
+---
+
+## 2. Integration Types
+
+### a. AWS Lambda Integration
+
+* Most common.
+* Two modes:
+
+  * **Proxy integration**: Raw HTTP request passed to Lambda.
+  * **Non-proxy integration**: You define a mapping template.
+
+### b. HTTP/HTTP Proxy
+
+* Call external or internal HTTP endpoints.
+* Proxy forwards entire request.
+
+### c. AWS Service Integration
+
+* Directly invoke AWS services like SQS, DynamoDB, Step Functions.
+* Example: Send data to SQS queue.
+
+### d. Mock Integration
+
+* Returns a static response.
+* Useful for testing or when backend is not ready.
+
+---
+
+## 3. Authorization and Security
+
+### a. IAM Authorization
+
+* Secure access using IAM roles/policies.
+* Best for internal AWS calls.
+
+### b. Lambda Authorizer
+
+* Custom auth logic written in Lambda.
+* Pass token or header; Lambda returns IAM policy.
+* Use case: API key-based or third-party auth.
+
+### c. Cognito User Pools
+
+* Managed JWT-based auth.
+* Best for external users or mobile/web app login.
+
+### d. API Key (Optional)
+
+* Not for auth.
+* Used with Usage Plans for rate limiting.
+* Sent via `x-api-key` header.
+
+---
+
+## 4. Throttling and Usage Plans
+
+### a. Global Limits
+
+* Default: 10,000 RPS per region (soft limit).
+
+### b. Stage-level Throttling
+
+* Set request limits for entire stage.
+
+### c. Method-level Throttling
+
+* Fine-grained control per endpoint.
+
+### d. Usage Plans
+
+* Associated with API Keys.
+* Define:
+
+  * Rate limit: requests per second.
+  * Burst: short spike capacity.
+  * Quota: requests per day/week/month.
+
+**Important**: Usage plans only apply if the request includes an API key.
+
+---
+
+## 5. Mapping Templates (Transformations)
+
+### a. Velocity Template Language (VTL)
+
+* Define input/output templates.
+* Operate on request/response body, headers, parameters.
+
+### b. Request Transformation
+
+* Example: Modify query params or JSON structure before invoking Lambda.
+
+```json
+{
+  "input": "$input.params('id')"
+}
+```
+
+### c. Response Transformation
+
+* Example: Format Lambda output to match frontend expectations.
+
+```json
+#set($inputRoot = $input.path('$'))
+{
+  "message": "$inputRoot.body.message"
+}
+```
+
+---
+
+## 6. Caching (REST API only)
+
+* Enable cache per stage and per method.
+* TTL: 0 to 3600 seconds.
+* Increases performance and reduces backend calls.
+* **Important**: Stale data is a risk.
+
+**Exam Tip**: Not supported for HTTP APIs.
+
+---
+
+## 7. Deployment, Stages, and Stage Variables
+
+### a. Deployment
+
+* Every change must be deployed to a **stage**.
+
+### b. Stages
+
+* Represent versions like `dev`, `test`, `prod`.
+* Configure:
+
+  * Logging
+  * Throttling
+  * Cache
+  * Variables (e.g., `$stageVariables.lambdaAlias`)
+
+### c. Canary Deployments
+
+* Shift traffic gradually to a new deployment version.
+* Set traffic percentage (e.g., 10% new, 90% old).
+
+---
+
+## 8. Monitoring and Tracing
+
+### a. CloudWatch Logs
+
+* Enable on stages to capture full request/response logs.
+
+### b. CloudWatch Metrics
+
+Common metrics:
+
+* 4XXError
+* 5XXError
+* IntegrationLatency
+* Latency
+
+### c. AWS X-Ray
+
+* Trace requests through API Gateway, Lambda, and downstream services.
+* Use for debugging latency and dependency trees.
+
+---
+
+## 9. CORS (Cross-Origin Resource Sharing)
+
+* Required for browser-based apps accessing APIs.
+* Must enable explicitly on OPTIONS method and include headers like:
+
+  * `Access-Control-Allow-Origin`
+  * `Access-Control-Allow-Methods`
+
+---
+
+## 10. Cross-Service Integration Examples
+
+| API Gateway    | Target Service | Use Case                 |
+| -------------- | -------------- | ------------------------ |
+| Lambda         | Any backend    | General compute          |
+| Step Functions | Workflows      | Multi-step orchestration |
+| SQS            | Queueing       | Buffer requests          |
+| DynamoDB       | DB             | Direct CRUD              |
+
+---
+
+## Summary Table
+
+| Concept                | REST API | HTTP API | Notes                            |
+| ---------------------- | -------- | -------- | -------------------------------- |
+| **Auth: IAM**          | Yes      | Yes      | Secure internal APIs             |
+| **Auth: Cognito**      | Yes      | Yes      | For user login/auth              |
+| **Lambda Integration** | Yes      | Yes      | Proxy/non-proxy                  |
+| **Caching**            | Yes      | No       | Reduces cost                     |
+| **Mapping Templates**  | Yes      | No       | Use VTL                          |
+| **Throttling**         | Yes      | Limited  | Usage Plans required for API key |
+| **Monitoring**         | Yes      | Yes      | CloudWatch, X-Ray                |
+
+---
 
